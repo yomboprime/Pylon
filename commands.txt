@@ -342,7 +342,7 @@ SET_CAMERA_FOV angle(deg) velocity(deg/s)
 
 * new command CHANGE_THRUSTER_DIRECTION vessel thrusterindex othervessel
 
-* new sound commands: SOUND_REPLACE_STOCK, SOUND_LOAD, SOUND_PLAY, SOUND_STOP. Requires installation of OrbiterSound 3.0
+* new sound commands: SOUND_REPLACE_STOCK, SOUND_LOAD, SOUND_PLAY, SOUND_STOP. Requires installation of OrbiterSound 4.0
 
 - SOUND_REPLACE_STOCK soundfile(str) WhichSoundToReplace(int)
 
