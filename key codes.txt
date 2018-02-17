@@ -1,0 +1,98 @@
+CockpitRotateLeft  0
+CockpitRotateRight 1
+CockpitRotateUp    2
+CockpitRotateDown  3
+CockpitDontLean    4
+CockpitLeanForward 5
+CockpitLeanLeft    6
+CockpitLeanRight   7
+CockpitResetCam    8
+PanelShiftLeft     9
+PanelShiftRight   10
+PanelShiftUp      11
+PanelShiftDown    12
+PanelSwitchLeft   13
+PanelSwitchRight  14
+PanelSwitchUp     15
+PanelSwitchDown   16
+TrackRotateLeft   17
+TrackRotateRight  18
+TrackRotateUp     19
+TrackRotateDown   20
+TrackAdvance      21
+TrackRetreat      22
+GroundTiltLeft    23
+GroundTiltRight   24
+GroundTiltUp      25
+GroundTiltDown    26
+IncMainThrust     27  //  +-
+DecMainThrust     28  //  |
+KillMainRetro     29  //  |
+FullMainThrust    30  //  |   Main/retro/hover engine control
+FullRetroThrust   31  //  |
+IncHoverThrust    32  //  |
+DecHoverThrust    33  //  +-
+RCSEnable         34
+RCSMode           35
+RCSPitchUp        36  //  +-
+RCSPitchDown      37  //  |
+RCSYawLeft        38  //  |   Reaction control
+RCSYawRight       39  //  |   (rotational mode)
+RCSBankLeft       40  //  |
+RCSBankRight      41  //  +-
+RCSUp             42  //  +-
+RCSDown           43  //  |
+RCSLeft           44  //  |   Reaction control
+RCSRight          45  //  |   (linear mode)
+RCSForward        46  //  |
+RCSBack           47  //  +-
+LPRCSPitchUp      48  //  +-
+LPRCSPitchDown    49  //  |
+LPRCSYawLeft      50  //  |   Reaction control - low power
+LPRCSYawRight     51  //  |   (rotational mode)
+LPRCSBankLeft     52  //  |
+LPRCSBankRight    53  //  +-
+LPRCSUp           54  //  +-
+LPRCSDown         55  //  |
+LPRCSLeft         56  //  |   Reaction control - low power
+LPRCSRight        57  //  |   (linear mode)
+LPRCSForward      58  //  |
+LPRCSBack         59  //  +-
+NMHoldAltitude    60  //  +-
+NMHLevel          61  //  |
+NMPrograde        62  //  |
+NMRetrograde      63  //  |   Navigation computer modes
+NMNormal          64  //  |
+NMAntinormal      65  //  |
+NMKillrot         66  //  +-
+Undock            67
+IncElevatorTrim   68
+DecElevatorTrim   69
+WheelbrakeLeft    70
+WheelbrakeRight   71
+HUD               72
+HUDMode           73
+HUDReference      74
+HUDTarget         75
+HUDColour         76
+IncSimSpeed       77
+DecSimSpeed       78
+IncFOV            79
+DecFOV            80
+MainMenu          81
+DlgHelp           82
+DlgCamera         83
+DlgSimspeed       84
+DlgCustomCmd      85
+DlgVisHelper      86
+DlgRecorder       87
+DlgInfo           88
+DlgMap            89
+DlgNavaid         90
+ToggleInfo        91
+ToggleFPS         92
+ToggleCamInternal 93
+ToggleTrackMode   94
+TogglePanelMode   95
+TogglePlanetarium 96
+ToggleRecPlay     97

@@ -1,0 +1,492 @@
+PYLON COMMANDS DESCRIPTION
+
+Command: <COMMAND_KEYWORD> <parameter1type> <parameter2type> <parameter3type> ...
+Description: A description.
+Duration: A command can be instantly executed or can involve an amount to time to complete.
+Parameters: Description of the parameter values needed by the command. If a command is passed less paramters than it expects, it qill do nothing and the sequence will be invalidated (will not show in the MFD)
+Example: An example of use.
+
+Abbreviations for parameter values in this doc:
+	vessel: A vessel name. Example: "STS-9"
+	pylon: A Pylon vessel name. Example: "APylon"
+	param: A Pylon vessel parameter name. Example: "APylon:RotAngle"
+	seq: A Pylon vessel sequence name. "APylon:ASequence"
+	value: A value of any type (numerical or string) Example: 34.0
+	<somename>(<someType>): a value of SomeType, with a name that explains the paarmeter purpose.
+
+All string types must be enclosed by "" and that the parameter names and sequence names use the syntax "pylonvesselname:param_name" or "pylonvesselname:sequence_name", and that the 'pylonvesselname' part is optional if the parameter or sequence belongs to the pylon executing the sequence command.
+
+SET_PARAM param value
+CALL_SEQ seq value
+CANCEL_SEQ seq value
+SET_CANCEL_SEQUENCE seq
+SET_SEQUENCE_KEY key
+DELAY seconds(Scalar)
+DELAY_UNTIL_MJD MJDdate(Scalar)
+DELAY_UNTIL_SIMT simtime(Scalar)
+WAIT_SEQUENCE seq
+WAIT_FUEL_LEVEL vessel propellant_resource(Integer) fuel_level(Scalar)
+WAIT_THRUSTER_LEVEL vessel thruster(Integer) thrust_level(Scalar)
+ATTACH parent(vessel) att_parent(Integer) att_child(Integer) child(vessel)
+*ATTACH_DISTANCE 
+*ATTACH_ALIGNED
+RELEASE velocity
+*RELEASE_ATT velocity
+*CREATE
+*CREATE_ATTACHED
+*DESTROY
+SET_FUEL_LEVEL vessel propellant_resource(Integer) fuel_level(Scalar)
+*TRANSFER_FUEL
+SET_MAIN_THRUST vessel level rate
+SET_RETRO_THRUST vessel level rate
+SET_HOVER_THRUST vessel level rate
+SET_THRUSTER_LEVEL vessel thruster(Integer) thrust_level(Scalar)
+*CHANGE_THRUST_DIRECTION
+SET_CAMERA_OFFSET offx(Scalar) offy(Scalar) offz(Scalar)
+SET_ENABLE_FOCUS vessel enabled(Boolean)
+USER_SEQ_ENABLED seq enabled(Boolean)
+USER_RELEASE_ENABLED vessel enabled(Boolean)
+USER_CREATE_ENABLED vessel enabled(Boolean)
+USER_DESTROY_ENABLED vessel enabled(Boolean)
+*SET_CAMERA_FOV
+*SET_FOCUS
+
+
+	Commands description
+----------------------------
+
+
+Command: SET_PARAM param value
+Description: Sets a Pylon parameter, ie Ang_Rot, Lin_Vel_Max, etc.
+Duration: Until the pylon has set the parameter (can be instantaneous or not)
+Parameters:
+	1: The parameter name
+	2: the value to set it to.
+Example:
+	SET_PARAM "aPylon:Rot_Angle" 30.0
+
+
+
+Command: CALL_SEQ seq value
+Description: Calls a sequence.
+Duration: Until the sequence finishes its execution or is cancelled elsewhere. If it was not 	active, the command CALL_SEQ terminates instantly.
+Parameters:
+	1: The sequence to call.
+	2: The value to pass as parameter. Currently this is mandatory even if the sequence doesn't have a parameter type. Simply put a 0 for the moment.
+Example:
+	CALL_SEQ ":DO_SOMETHING" "A string value"
+
+
+
+Command: CANCEL_SEQ seq value
+Description: Cancels an active sequence, and calls the cancel sequence if one was defined.
+Duration: Until the cancel sequence finishes if it was defined, or instantly if it wasn't.
+Parameters:
+	1: The sequence to cancel.
+	2: The value to pass to the cancel sequence if it is defined and has parameter type. This is mandatory as in CALL_SEQ, even if there's no cancel sequence or it hasn't parameter.
+Example: CANCEL_SEQ ":DO_SOMETHING" 30.0
+
+
+
+Command: SET_CANCEL_SEQUENCE "seq"
+Description: Defines the sequence "seq" as the cancel sequence of the one that executes this command. Though this is a command, it is executed on sequence creation, and so the cancel sequence must exist before this one, so this means that a cancel sequence must be defined above the sequence it will belong to, in the file.
+The cancel sequence could belong to another pylon, but it is not recommended (in the case a vessel could be deleted)
+Duration: None (executes at creation of the sequence)
+Parameters:
+	1: The cancel sequence
+Example:
+	Lets define a sequence and its cancel sequence (remember, in reverse order) Note that the cancel sequence is not callable by the user.
+
+	BEGINSEQ "TheCancelSequence" PARALLEL
+		SET_PARAM "aPylon:Rot_Angle" 0
+		SET_PARAM "anotherPylon:Rot_Angle" 0
+	ENDSEQ
+	BEGINSEQ "TheSequence" (Scalar) USER
+		SET_CANCEL_SEQUENCE ":TheCancelSequence"  ;Note the : here. This always must be.
+		SET_PARAM "aPylon:Rot_Angle" #
+		SET_PARAM "anotherPylon:Rot_Angle" 45
+	ENDSEQ
+
+Command: SET_SEQUENCE_KEY key(Integer)
+Description: Sets a key for activating this sequence (the one where this command is). This command is executed at sequence creation and sets the key wich activates the sequence (when the pylon that own this sequence is in focus)
+Duration: Instant
+Parameters: key code. See orbiterAPI.h for keyboard key codes
+Example: DELAY 1.5
+
+
+
+Command: DELAY seconds(Scalar)
+Description: Waits for the specified amount of seconds
+Duration: Try to guess..
+Parameters: The amount of seconds to wait
+Example: DELAY 1.5
+
+
+
+Command: DELAY_UNTIL_MJD MJDdate(Scalar)
+Description: Waits until the specified MJD date is reached
+Duration: Try to guess..
+Parameters: The MJD date to wait for (units are days)
+Example: DELAY_UNTIL_MJD 51982.5568
+
+
+
+Command: DELAY_UNTIL_SIMT simtime(Scalar)
+Description: Waits until the simulation time has been reached. Note that if the Orbiter session is quitted and restarted while this command is running, the termination of the command will be determined by the sim time it was when the command was executed, and will not be affected by the sim time being reset. In other words, the three delay commands convert the time to awake to an absolute time reference, and then waits to that time.
+Duration: Try to guess..
+Parameters: The sim time to wait for (units are seconds)
+Example: DELAY_UNTIL_SIMT 600
+
+
+
+Command: WAIT_SEQUENCE seq
+Description: Waits until the sequence terminates execution (not cancelling, only execution)
+Duration: Well, already said.
+Parameters: The sequence to wait for.
+Example: WAIT_SEQUENCE "aPylon:aSequence"
+
+
+
+Command: WAIT_FUEL_LEVEL vessel propellant_resource(Integer) fuel_level(Scalar)
+Description: Waits until the fuel level of the propellant resource (tank) identified by its index  goes below the specified level.
+Duration: 0 to infinite.
+Parameters:
+	1: The vessel.
+	2: The index of the propellant resource of the vessel. Must be >= 0 and < the number of tanks in the vessel, or the command will just finish.
+	3: The fuel level to wait for (between 0 and 1)
+Example: WAIT_FUEL_LEVEL "Discovery" 0 0.1
+
+
+
+Command: WAIT_THRUSTER_LEVEL vessel thruster(Integer) thrust_level(Scalar)
+Description: Waits until the specified thruster level gets above the specified level.
+Duration: 0 to infinite.
+Parameters:
+	1: The vessel.
+	2: The index of the vessel thruster. Must be >= 0 and < the number of thrusters in the vessel, or the command will just finish.
+	3: The thruster level to wait for (between 0 and 1)
+Example: WAIT_THRUSTER_LEVEL "Discovery" 0 0.95
+
+
+
+Command: ATTACH parent(vessel) att_parent(Integer) att_child(Integer) child(vessel)
+Description: Attach the child vessel to the parent vessel. Notes: This command attaches the child to the parent wherever they are, so its not very realistic.
+Duration: Instant.
+Parameters:
+	1: The parent vessel
+	2: The attachment of the parent to attach the child (type tochild, C)
+	3: The attachment of the child to use (type toparent, P)
+	4: The child vessel
+Example: ATTACH "Discovery" 0 0 "Carina"
+
+
+
+Command: RELEASE velocity
+Description: Release an attached vessel with a initial speed. if it is a pylon or is attached to a pylon that was rotating over de Z axis, the detached body will maintain the rotation's angular speed. No angular momentum calcs are performed, but linear momentum is conserved.
+Duration: Instant
+Parameters: vel Velocity of initial impulse in m/s
+Example:
+RELEASE "Carina" 0.3
+
+
+Command: SET_FUEL_LEVEL vessel propellant_resource(Integer) fuel_level(Scalar)
+Description: Sets the fuel level of the propellant resource (tank) identified by its index  to the specified level.
+Duration: Instant.
+Parameters:
+	1: The vessel.
+	2: The index of the propellant resource of the vessel. Must be >= 0 and < the number of tanks in the vessel.
+	3: The desired fuel level (between 0 and 1)
+Example: SET_FUEL_LEVEL "Discovery" 0 1.0
+
+
+
+Command: SET_MAIN_THRUST vessel level rate
+Description: Sets the levels of all the thrusters in the group MAIN to the specified level. It does linearly at a constant rate.
+Duration: Indetemined (thruster level could be set externally, for example from user input).
+Parameters:
+	1: The vessel to set the thrust level.
+	2: The thrust level.
+	3: rate of change
+Example: SET_MAIN_THRUST "STS-9" 1.0 0.16667
+
+
+
+Command: SET_RETRO_THRUST vessel level rate
+Description: Sets the levels of all the thrusters in the group RETRO to the specified level. It does linearly at a constant rate.
+Duration: Indetemined (thruster level could be set externally, for example from user input).
+Parameters:
+	1: The vessel to set the thrust level.
+	2: The thrust level.
+	3: rate of change
+Example: SET_RETRO_THRUST "SH-1" 1.0 0.1
+
+
+
+Command: SET_HOVER_THRUST vessel level rate
+Description: Sets the levels of all the thrusters in the group HOVER to the specified level. It does linearly at a constant rate.
+Duration: Indetemined (thruster level could be set externally, for example from user input).
+Parameters:
+	1: The vessel to set the thrust level.
+	2: The thrust level.
+	3: rate of change
+Example: SET_HOVER_THRUST "SH-1" 1.0 0.1
+
+
+
+Command: SET_THRUSTER_LEVEL vessel thruster(Integer) thrust_level(Scalar)
+Description: Sets a single thruster level.
+Duration: Instant.
+Parameters:
+	1: The vessel.
+	2: The index of the vessel thruster. Must be >= 0 and < the number of thrusters in the vessel, or the command will just finish.
+	3: The desired thruster level (between 0 and 1)
+Example: SET_THRUSTER_LEVEL "Discovery" 0 0.0
+
+
+
+Command: SET_CAMERA_OFFSET offx(Scalar) offy(Scalar) offz(Scalar)
+Description: Changes the cockpit camera position.
+Duration: Instant.
+Parameters:
+	1: The vessel to change camera offset.
+	2,3,4: The coordinates of the new camera offset(local vessel coordinates)
+Example: SET_CAMERA_OFFSET "aVessel" 3 -2 10
+
+
+
+Command: SET_ENABLE_FOCUS vessel enabled(Boolean)
+Description: Enables or disables the ability of the vessel to receive user focus.
+Duration: Instant.
+Parameters:
+	1: The vessel.
+	2: The value indicating enabling/disabling of the option
+Example: SET_ENABLE_FOCUS "aVessel" 0
+
+
+
+Command: USER_SEQ_ENABLED seq enabled(Boolean)
+Description: Sets a sequence to be user or not. User sequences are the ones that the user can access through the MFD.
+Duration: Instant.
+Parameters:
+	1: The sequence.
+	2: The value indicating enabling/disabling of the option
+Example: USER_SEQ_ENABLED "aPylon:aSequence" 1
+
+
+
+Command: USER_RELEASE_ENABLED vessel enabled(Boolean)
+Description: This option makes it possible to forbid the user to release a Pylon through the MFD. By default the option is True (the user can release it) Not-pylon vessels always can be released through the MFD.
+Duration: Instant.
+Parameters:
+	1: The Pylon.
+	2: The value indicating enabling/disabling of the option
+Example: USER_RELEASE_ENABLED "aPylon" 0
+
+
+
+Command: USER_CREATE_ENABLED vessel enabled(Boolean)
+Description: This option makes it possible to forbid the user to create objects in the attachments of a Pylon through the MFD. By default the option is True (the user can create objects) The MFD always allows creating objects in the attachments of not-Pylon vessels.
+Duration: Instant.
+Parameters:
+	1: The Pylon.
+	2: The value indicating enabling/disabling of the option
+Example: USER_CREATE_ENABLED "aPylon" 0
+
+
+
+Command: USER_DESTROY_ENABLED vessel enabled(Boolean)
+Description: This option makes it possible to forbid the user to destroy a Pylon through the MFD. By default the option is True (the user can destroy it) The MFD always allows destroying not-Pylon vessels.
+Duration: Instant.
+Parameters:
+	1: The Pylon.
+	2: The value indicating enabling/disabling of the option
+Example: USER_DESTROY_ENABLED "aPylon" 0
+
+
+
+*******************************************************
+*******************************************************
+
+
+
+Pylon changes from beta 3.1:
+
+* new command CREATE_ATTACHED (tochild and toparent are attachment numbers starting at 0):
+CREATE_ATTACHED "parentvessel" tochild toparent "childvessel"
+
+* new command ATTACH_DISTANCE:
+
+ATTACH_DISTANCE "parentvessel" tochild toparent "childvessel" distance
+
+* new command ATTACH_ALIGNED (angle is in degrees)
+
+ATTACH_ALIGNED "parentvessel" tochild toparent "childvessel" distance angle
+
+* new command DESTROY:
+DESTROY "vesselname"
+
+* progressive thrust in SET_MAIN_LEVEL, SET_RETRO_LEVEL, and SET_HOVER_LEVEL commands (velocity is 1 for full thrust in 1 second):
+SET_MAIN_LEVEL "vesselname" level velocity
+The SET_THRUST_LEVEL doesn't have the velocity parameter
+
+* new pylon mfd parameter SHOWCOMMANDS to allow displaying only sequences in the mfd.
+
+* command SET_FUEL_LEVEL now works
+
+* attachment parameters in idle vessels no more get updated
+
+* Progressive zoom command:
+SET_CAMERA_FOV angle(deg) velocity(deg/s)
+
+* MFD remembers last sequence of each pylon
+
+* new command CHANGE_THRUSTER_DIRECTION vessel thrusterindex othervessel
+
+* new sound commands: SOUND_REPLACE_STOCK, SOUND_LOAD, SOUND_PLAY, SOUND_STOP. Requires installation of OrbiterSound 3.0
+
+- SOUND_REPLACE_STOCK soundfile(str) WhichSoundToReplace(int)
+
+Replaces standard sound.
+
+soundfile: path of sound file ex: "sound\vessel\aircond.wav"
+
+WhichSoundToReplace:
+REPLACE_MAIN_THRUST			 10		
+REPLACE_HOVER_THRUST		 11		
+REPLACE_RCS_THRUST_ATTACK	 12	
+REPLACE_RCS_THRUST_SUSTAIN	 13	
+REPLACE_AIR_CONDITIONNING	 14		
+REPLACE_COCKPIT_AMBIENCE_1	 15	
+REPLACE_COCKPIT_AMBIENCE_2	 16		
+REPLACE_COCKPIT_AMBIENCE_3	 17	
+REPLACE_COCKPIT_AMBIENCE_4	 18	
+REPLACE_COCKPIT_AMBIENCE_5	 19		
+REPLACE_COCKPIT_AMBIENCE_6	 20	
+REPLACE_COCKPIT_AMBIENCE_7	 21	
+REPLACE_COCKPIT_AMBIENCE_8	 22	
+REPLACE_COCKPIT_AMBIENCE_9	 23	
+
+
+- SOUND_LOAD soundfile(str) soundname(str) soundslot(1..60) mode(0..8)
+
+Loads a sound. This command should be used only in the STATE sequence. Don't use the same name two times.
+
+soundfile: path of sound file ex: "sound\vessel\aircond.wav"
+
+soundslot: Slot for sound, 1 to 60
+
+Mode:
+DEFAULT, 0
+INTERNAL_ONLY, 1
+BOTHVIEW_FADED_CLOSE, 2
+BOTHVIEW_FADED_MEDIUM, 3
+BOTHVIEW_FADED_FAR, 4
+EXTERNAL_ONLY_FADED_CLOSE, 5
+EXTERNAL_ONLY_FADED_MEDIUM, 6
+EXTERNAL_ONLY_FADED_FAR, 7
+RADIO_SOUND, 8
+
+Read OrbiterSoundSDK3.h for explanation on the play modes.
+
+
+- SOUND_PLAY soundname(str) loop(0..1) volume(0..255)
+
+Plays a sound if vessel is in focus. Command ends when sound is finished only if playing without loop.
+
+soundname: name given when loading the sound.
+
+loop: 0 = no loop. 1 = loop (necessary to hear distance attenuation) With loop on, the command never ends.
+
+volume: volume(0..255)
+
+
+- SOUND_STOP soundname(str)
+
+Stops a sound.
+
+soundname: sound to stop.
+
+
+Example:
+
+	BEGINSEQ "STATE"
+	SOUND_REPLACE_STOCK "sound\vessel\aircond.wav" 10   ; Replace main thruster sound by air conditioner
+	SOUND_LOAD "sound\vessel\docking.wav" "dock" 1 3   ; load sound in slot 1 with name "dock", cockpit&external, medium attenuation
+	ENDSEQ
+	
+	; plays the sound (looped for distance attenuation)
+	BEGINSEQ "play sound" USER
+	SOUND_PLAY "dock" 1 255   ; if not looped it will sound once
+	ENDSEQ
+	
+	; stops the sound
+	BEGINSEQ "stop sound" USER
+	SOUND_STOP "dock"
+	ENDSEQ
+	
+	
+* Mesh handling functions	
+	
+- ADD_MESH filename(str) meshname(str) visibility x y z
+
+Adds a mesh.
+
+filename: mesh file name without extension (can have subdirectories)
+meshname: unique name given to this mesh
+visibility:
+						MESHVIS_NEVER          0
+						MESHVIS_EXTERNAL       1
+						MESHVIS_COCKPIT        2
+						MESHVIS_ALWAYS         3
+						MESHVIS_VC             4
+						MESHVIS_EXTPASS        16
+
+x,y,z: coordinates of mesh relative to vessel.
+
+- SET_MESH_VISIBILITY meshname visibility
+
+Changes visibility mode for a mesh
+
+meshname: unique name given to the mesh
+visibility: visibility mode as in ADD_MESH
+
+- CLEAR_MESHES
+
+Clears all meshes in vessel
+
+
+
+********************************************************
+********************************************************
+
+
+Check this section, it is obsolete:
+
+	Future additional commands
+----------------------------------
+
+*** Commands to be as least in version 1.0:
+
+- RELEASE (of course),
+- CREATE,
+- CREATE_ATTACHED,
+- DESTROY,
+- CREATE_ATTACHMENT,
+- SET_TOCHILD_ATT,
+- SET_FOCUS,
+- CREATE_ATTACH_AT_DOCK,
+- CREATE_DOCK_AT_ATTACH,
+- At least one or two commands for grappling/arresting/collision detection.
+- Simple Commands for more execution control: SKIP_IF (skips next command), RESET_IF (resets the sequence)
+- New Pylon parameter: Target. It will allow a Pylon to point to a vessel or a vessel attachment position.
+- More commands for setting vessel status.
+
+
+*** Commands planned for future versions (in this order):
+
+- Commands to access OrbiterSound (this has to be studied but it is a must, don't you think?)
+- Commands for managing meshes, particle streams, thrusters, propellant resources...
+- Commands for defining standard animations the way it's done with the API.
+- More high-level commands that i haven't thought yet but are there for someone to think of.
+
+- Add syntax for defining random number generation and access some vessel status variables.
