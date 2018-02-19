@@ -1,7 +1,7 @@
 // ==============================================================
 //
 //  CPylon.cpp
-//  
+//
 //	ORBITER Vessel Interface
 //
 //	Author: Juan Jose Luna
@@ -94,7 +94,7 @@ void CPylon::clbkLoadStateEx (FILEHANDLE scn, void *status)
 						for (i=0;i<PYL_PARAM_NOT_DEFINED;i++) {
 							if (strcmp(PylonParamTypeName[i],theValue2.strValue)==0) break;
 						}
-						if (i < PYL_PARAM_NOT_DEFINED) 
+						if (i < PYL_PARAM_NOT_DEFINED)
 							seqtype = i;
 						else continue;
 						lastPos = PylonSequence::GetToken(lastPos, theValue2);
@@ -130,7 +130,7 @@ void CPylon::clbkLoadStateEx (FILEHANDLE scn, void *status)
 				ParseScenarioLineEx (line, status);
 			}
 		} else {
-			
+
 			lastPos = AddSequenceCmd(seq, line);
 
 			if (lastPos == line) {
@@ -142,14 +142,14 @@ void CPylon::clbkLoadStateEx (FILEHANDLE scn, void *status)
 					break;
 				}
 			} else numCmds++;
-		}		
+		}
     }
 }
 
 // Write status to scenario file
 void CPylon::clbkSaveState (FILEHANDLE scn)
 {
-	
+
 	#define bufSize 4096
 	char cbuf[bufSize];
 
@@ -269,7 +269,7 @@ void CPylon::clbkPreStep (double simt, double simdt, double mjd)
 
 			double cm = GetEmptyMass();
 			op = NULL;
-			while (op==NULL) {	
+			while (op==NULL) {
 				double rm = r->GetEmptyMass();
 				r->SetEmptyMass(rm + cm);
 				int	j=0, m= r->AttachmentCount(true);
@@ -300,7 +300,7 @@ void CPylon::clbkPreStep (double simt, double simdt, double mjd)
 	else
 		if (attachmentToParent != NULL) {
 		SetAttachmentParams(attachmentToParent,pos,dir,rot);
-	} 
+	}
 /*	else
 	{
 		sprintf(oapiDebugString(),"TIMESTEP 1: %s",GetName());
@@ -327,7 +327,7 @@ sprintf(oapiDebugString(),"CHUNGONOKO: %s",GetName());
 					VESSEL *r=this;
 					double cm = v->GetEmptyMass();
 					op = NULL;
-					while (op==NULL) {	
+					while (op==NULL) {
 						double rm = r->GetEmptyMass();
 						r->SetEmptyMass(rm + cm);
 						int j=0, m= r->AttachmentCount(true);
@@ -355,8 +355,6 @@ int CPylon::clbkConsumeBufferedKey (DWORD key, bool down, char *kstate)
 {
 	if (!down) return 0; // only process keydown events
 
-	CPylonRT *p = (CPylonRT*)vessel;
-
 	if (KEYMOD_SHIFT (kstate)) {
 	} else if (KEYMOD_CONTROL (kstate)) {
 /*		switch (key) {
@@ -365,11 +363,11 @@ int CPylon::clbkConsumeBufferedKey (DWORD key, bool down, char *kstate)
 		}
 */
 	} else {
-		if (((CPylon*)p)->ActivateSequenceByKey(key)) {
+		if (this->ActivateSequenceByKey(key)) {
 			return 1;
 		}
 	}
-	return 0;    
+	return 0;
 }
 
 void CPylon::clbkPostCreation (void)
@@ -405,11 +403,11 @@ char *CPylon::GetParameterName(int index)
 }
 
 // Returns the type of a parameter:
-//   PYLON_PARAM_BOOL 
-//   PYLON_PARAM_INT 
-//   PYLON_PARAM_DOUBLE 
-//   PYLON_PARAM_STRING 
-//   PYLON_PARAM_NOTDEFINED 
+//   PYLON_PARAM_BOOL
+//   PYLON_PARAM_INT
+//   PYLON_PARAM_DOUBLE
+//   PYLON_PARAM_STRING
+//   PYLON_PARAM_NOTDEFINED
 // Parameters:
 //   index: The index of the parameter. if index is < 0 or >= GetParameterCount(),
 // the returned value should be PYLON_PARAM_NOTDEFINED
@@ -428,7 +426,7 @@ bool CPylon::IsUserParameter(int index) {
 	return false;
 }
 
-// Returns the value of a boolean parameter. If the parameter is not of this type, 
+// Returns the value of a boolean parameter. If the parameter is not of this type,
 // the return value is undefined.
 //   index: The index of the parameter. If index is < 0 or >= GetParameterCount(),
 // the returned value is undefined.
@@ -437,7 +435,7 @@ bool CPylon::GetParamBol(int index)
 	return false;
 }
 
-// Returns the value of an integer parameter. If the parameter is not of this type, 
+// Returns the value of an integer parameter. If the parameter is not of this type,
 // the return value is undefined.
 //   index: The index of the parameter. If index is < 0 or >= GetParameterCount(),
 // the returned value is undefined.
@@ -446,7 +444,7 @@ int CPylon::GetParamInt(int index)
 	return 0;
 }
 
-// Returns the value of a double parameter. If the parameter is not of this type, 
+// Returns the value of a double parameter. If the parameter is not of this type,
 // the return value is undefined.
 //   index: The index of the parameter. If index is < 0 or >= GetParameterCount(),
 // the returned value is undefined.
@@ -460,7 +458,7 @@ double CPylon::GetParamDbl(int index)
 // be read, not written to.
 //   index: The index of the parameter. If index is < 0 or >= GetParameterCount(),
 // the returned value is undefined.
-char *CPylon::GetParamStr(int index) 
+char *CPylon::GetParamStr(int index)
 {
 	return NULL;
 }
@@ -470,11 +468,11 @@ bool CPylon::SetParam(int index, TPylParamValue *value) {
 	if (paramt < PYL_PARAM_INTEGER) {
 		return SetParamBol(index, value->bolValue);
 	}
-	else if (paramt < PYL_PARAM_SCALAR) 
+	else if (paramt < PYL_PARAM_SCALAR)
 		return SetParamInt(index, value->intValue);
-	else if (paramt < PYL_PARAM_STRING) 
+	else if (paramt < PYL_PARAM_STRING)
 		return SetParamDbl(index, value->dblValue);
-	else if (paramt < PYL_PARAM_NOT_DEFINED) 
+	else if (paramt < PYL_PARAM_NOT_DEFINED)
 		return SetParamStr(index, value->strValue);
 	else return true;
 }
@@ -513,15 +511,15 @@ bool CPylon::SetParamDbl(int index, double value)
 //meter.
 //   index: The index of the parameter. If index is < 0 or >= GetParameterCount(),
 // the call should be ignored.
-//   value: The value (a pointer to a NULL terminated string). The string should not be 
+//   value: The value (a pointer to a NULL terminated string). The string should not be
 // modified by the call.
-bool CPylon::SetParamStr(int index, char *string) 
+bool CPylon::SetParamStr(int index, char *string)
 {
 	return true;
 }
 
 // Increments a parameter. The behavior of this function depends on the meaning of the parameter.
-// Parameters: 
+// Parameters:
 //   index: The index of the parameter. If index is < 0 or >= GetParameterCount(),
 // the call should be ignored.
 bool CPylon::IncParam(int index)// Default behavior: does nothing
@@ -530,7 +528,7 @@ bool CPylon::IncParam(int index)// Default behavior: does nothing
 }
 
 // Decrements a parameter. The behavior of this function depends on the meaning of the parameter.
-// Parameters: 
+// Parameters:
 //   index: The index of the parameter. If index is < 0 or >= GetParameterCount(),
 // the call should be ignored.
 bool CPylon::DecParam(int index)// Default behavior: does nothing
@@ -773,7 +771,7 @@ ATTACHMENTHANDLE CPylon::GetAttToParent(void) const {
 bool CPylon::PylonAttach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment) {
 	VESSEL *p = oapiGetVesselInterface(parent),
 		*c = oapiGetVesselInterface(child);
-	
+
 	if (p==NULL || c==NULL) return false;
 	CPylon *pp = IsPylonVessel(p), *pc = IsPylonVessel(c);
 
@@ -791,16 +789,16 @@ bool CPylon::PylonAttach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE par
 	}
 
 	if (!p->AttachChild(child, parent_attachment, child_attachment)) return false;
-	
+
 	if (pc!=NULL)
 		pc->PropagateChange(false, p);
 	else if (pp!=NULL)
 		pp->PropagateChange(false, pp->GetParent());
-	
+
 	o = NULL;
 	VESSEL* r=p;
 	double cm = c->GetEmptyMass();
-	while (o==NULL) {   
+	while (o==NULL) {
 		double rm = r->GetEmptyMass();
 		r->SetEmptyMass(rm + cm);
 		int i=0, n= r->AttachmentCount(true);
@@ -828,7 +826,7 @@ bool CPylon::PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE par
 		if (pp==NULL) {
 			pc->PropagateChange(true, NULL);
 		}
-	}*/	
+	}*/
 	if (pp!=NULL)
 		pp->PropagateChange(false, pp->GetParent());
 	if (pc!=NULL) {
@@ -851,7 +849,7 @@ bool CPylon::PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE par
 		if (o==NULL) break;
 		r = oapiGetVesselInterface(o);
 		if (r==NULL) break;
-		o=NULL;         
+		o=NULL;
 	}
 
 	bool done = p->DetachChild(parent_attachment, vel);
@@ -890,7 +888,7 @@ sprintf(oapiDebugString(),"pylon detach 8,  prt=%s",prt->GetName());
 				if (prt != c) {
 					VECTOR3 globalAngVel;
 					prt->GlobalRot( localAngVel, globalAngVel );
-					
+
 					VECTOR3 oX, oY, oZ;
 					c->GlobalRot(_V(1,0,0), oX);
 					c->GlobalRot(_V(0,1,0), oY);
@@ -1007,7 +1005,7 @@ void CPylon::Changed(void)
 //
 // When Detaching object A from B, a call should be made prior to B->DetachChild(). If A is
 // a CPylon, call A->PropagateChange(true, B, NULL).
-// 
+//
 // You must ensure first that A is a CPylon using the IsPylonVessel() static function. If it is not,
 // then check B and call B->PropagateChanges(false, B->GetParent(), B->GetAttToParent())
 // If neither is a CPylon, just call DetachChild().
@@ -1126,7 +1124,7 @@ void CPylon::ActualizeParent(void) {
 
 //	this->parent = v;
 
-	if (p==NULL) { 
+	if (p==NULL) {
 		PropagateChange(false, v);
 	}
 
@@ -1165,7 +1163,7 @@ PylonMesh* PylonMesh::FindMesh(const char *n)
 {
 
 	if ( next )
-	{	
+	{
 		PylonMesh *pm = next->FindMesh(n);
 		if (pm) return pm;
 	}
@@ -1205,7 +1203,7 @@ void PylonMesh::Add(CPylon * p, unsigned char *filename, unsigned char *name, in
 		m->next = new PylonMesh();
 		if (!m->next) { m->next = 0; return; }
 		m->next->prev = m;
-		m = m->next;		
+		m = m->next;
 	}
 
 	_snprintf((char *)m->file, NAME_SIZE, "%s", filename);

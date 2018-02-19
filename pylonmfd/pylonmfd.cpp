@@ -61,7 +61,7 @@ PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
 
     selectedAttachmentIndex = selectedParameter = selParamtype = selSequence = 0;
 
-	showCommands = 1;
+	showCommands = 0;
 
 	initfocusH = oapiGetFocusObject();
 	if (initfocusH==NULL)
@@ -126,7 +126,7 @@ bool cbCancelSeq(void *id, char *str, void *data);
 // Return button labels
 char *PylonMFD::ButtonLabel (int bt)
 {
-	// The labels for the buttons used by the MFD 
+	// The labels for the buttons used by the MFD
 	static char *label[12] = {"AT-", "AT+", "CRT", "RLS", "DES", "P-", "UP", "DWN", "SET", "INC", "DEC", "P+"};
 	return (bt < 12 ? label[bt] : 0);
 }
@@ -148,8 +148,8 @@ int PylonMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"<- Destroy",
 		 "   object.", 'D'},
  		{"<- Select prev.",
-		 "   pylon param.", 'Z'},	
-	
+		 "   pylon param.", 'Z'},
+
 		{" Go up in the ->",
 		 "    structure.", 'W'},
 		{"   Go down in ->",
@@ -173,19 +173,19 @@ bool PylonMFD::ConsumeButton (int bt, int event) {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
 	switch (bt) {
-		case 0 : ConsumeKeyBuffered(OAPI_KEY_Q); break; 
+		case 0 : ConsumeKeyBuffered(OAPI_KEY_Q); break;
 		case 1 : ConsumeKeyBuffered(OAPI_KEY_A); break;
-		case 2 : ConsumeKeyBuffered(OAPI_KEY_C); break; 
-		case 3 : ConsumeKeyBuffered(OAPI_KEY_R); break; 
-		case 4 : ConsumeKeyBuffered(OAPI_KEY_D); break; 
-		case 5 : ConsumeKeyBuffered(OAPI_KEY_Z); break; 
+		case 2 : ConsumeKeyBuffered(OAPI_KEY_C); break;
+		case 3 : ConsumeKeyBuffered(OAPI_KEY_R); break;
+		case 4 : ConsumeKeyBuffered(OAPI_KEY_D); break;
+		case 5 : ConsumeKeyBuffered(OAPI_KEY_Z); break;
 
 		case 6 : ConsumeKeyBuffered(OAPI_KEY_W); break;
-		case 7 : ConsumeKeyBuffered(OAPI_KEY_S); break; 
-		case 8 : ConsumeKeyBuffered(OAPI_KEY_V); break; 
-		case 9 : ConsumeKeyBuffered(OAPI_KEY_N); break; 
+		case 7 : ConsumeKeyBuffered(OAPI_KEY_S); break;
+		case 8 : ConsumeKeyBuffered(OAPI_KEY_V); break;
+		case 9 : ConsumeKeyBuffered(OAPI_KEY_N); break;
 		case 10: ConsumeKeyBuffered(OAPI_KEY_B); break;
-		case 11: ConsumeKeyBuffered(OAPI_KEY_X); break; 
+		case 11: ConsumeKeyBuffered(OAPI_KEY_X); break;
 
 		default: return false;
 	}
@@ -329,7 +329,7 @@ void PylonMFD::Update (HDC hDC)
 {
 	Title (hDC, strings[0]);
 // todo: aqui se asume que se tiene focus y focusH validos.
-// usar oapiGetFocusObject para ver si ha cambiado el focus, y si 
+// usar oapiGetFocusObject para ver si ha cambiado el focus, y si
 // es asi actualizar todas las variables llamando a selectCurrentParameter
 // (ademas se puede poner a 0 antes)
 
@@ -376,7 +376,7 @@ void PylonMFD::Update (HDC hDC)
 	double mass=focus->GetEmptyMass();
 	sprintf(s,"Mass: %.0f", mass);
 	print(hDC, 5, &line, s);
-	
+
 
 	// Sub-object management
 
@@ -413,7 +413,7 @@ void PylonMFD::Update (HDC hDC)
 	}
 	tab+=TAB;
 	line+=LINE;
-	
+
 		// print child info
 
 		if (pchild == NULL) {
@@ -432,7 +432,7 @@ void PylonMFD::Update (HDC hDC)
 			return;
 		}
 //kkk**********************************************************************
-		
+
 		selectedParameter = pchild->GetMFDSelectedParameter();
 
 		if (selectedParameter<np && pchild!=NULL && ( !pchild->userParametersEnabled || !showCommands ) ) {
@@ -557,7 +557,7 @@ int PylonMFD::selectCurrentAttachment(void) {
 		}
 		selectedAttachmentIndex = i;
 		return i;
-	}	
+	}
 }
 
 void PylonMFD::selectPrevAttachment(void) {
@@ -571,16 +571,16 @@ void PylonMFD::selectPrevAttachment(void) {
 				i--;
 				if (i>=0) attachH = focus->GetAttachmentHandle(false, i);
 			}
-			if (i<0) { selectedAttachment = attachH; i = 0; selectedParameter = 0;}		
+			if (i<0) { selectedAttachment = attachH; i = 0; selectedParameter = 0;}
 			i--;
 			if (i<0) {
 				selectedAttachment = NULL;
 				return;
 			}
 		}
-		
+
 		selectedAttachment = focus->GetAttachmentHandle(false, i);
-	}	
+	}
 }
 void PylonMFD::selectNextAttachment(void)  {
 	int n = focus->AttachmentCount(false), i=n-1;
@@ -599,7 +599,7 @@ void PylonMFD::selectNextAttachment(void)  {
 			if (i>=n) {selectedAttachment = NULL; return;}
 		}
 		selectedAttachment = focus->GetAttachmentHandle(false, i);
-	}	
+	}
 }
 void PylonMFD::selectPrevParam(void) {
 	selectCurrentAttachment();
@@ -610,7 +610,7 @@ void PylonMFD::selectPrevParam(void) {
 	else {
 		childH = focus->GetAttachmentStatus(selectedAttachment);
 		if (childH == NULL) return;
-		child = oapiGetVesselInterface(childH);	
+		child = oapiGetVesselInterface(childH);
 	}
 	pchild = CPylon::IsPylonVessel(child);
 	if (pchild==NULL) {return;}
@@ -653,7 +653,7 @@ void PylonMFD::selectNextParam(void) {
 	else {
 		childH = focus->GetAttachmentStatus(selectedAttachment);
 		if (childH == NULL) return;
-		child = oapiGetVesselInterface(childH);	
+		child = oapiGetVesselInterface(childH);
 	}
 	pchild = CPylon::IsPylonVessel(child);
 	if (pchild==NULL) {return;}
@@ -677,7 +677,7 @@ void PylonMFD::selectNextParam(void) {
 
 	selectedParameter = sp;
 	if (selectedParameter<0) selectedParameter = 0;
-	if (selectedParameter>=np+ns) selectedParameter = np+ns-1;	
+	if (selectedParameter>=np+ns) selectedParameter = np+ns-1;
 	if (selectedParameter<np) {
 		selSequence = -1;
 		selParamtype = pchild->GetParameterType(selectedParameter);
@@ -698,7 +698,7 @@ bool PylonMFD::selectCurrentParameter(void) {
 	else {
 		childH = focus->GetAttachmentStatus(selectedAttachment);
 		if (childH == NULL) return false;
-		child = oapiGetVesselInterface(childH);	
+		child = oapiGetVesselInterface(childH);
 	}
 	pchild = CPylon::IsPylonVessel(child);
 	if (pchild == NULL) return false;
@@ -707,7 +707,7 @@ bool PylonMFD::selectCurrentParameter(void) {
 	if (np==0 && ns==0) return false;
 	if (selectedParameter<0) selectedParameter = 0;
 	if (selectedParameter>=np+ns) selectedParameter = np+ns-1;
-		
+
 	if (selectedParameter<np) {
 		selSequence = -1;
 		selParamtype = pchild->GetParameterType(selectedParameter);
@@ -732,7 +732,7 @@ void PylonMFD::upLevel(void)
 	if (pH==NULL) return;
 	VESSEL *p = oapiGetVesselInterface(pH);
 	if (p==NULL) return;
-	
+
 	CPylon *pP = CPylon::IsPylonVessel(p);
 	/*if (p!= NULL && !p->CanNavigate()) return;*/
 	selectedAttachment = (void *)1;
@@ -771,7 +771,7 @@ void PylonMFD::decParameter(void)
 
 	if (selSequence == -1) {
 		// Parameter
-		pchild->DecParam(selectedParameter);	
+		pchild->DecParam(selectedParameter);
 
 	} else {
 		// Sequence
@@ -784,7 +784,7 @@ void PylonMFD::decParameter(void)
 			oapiOpenInputBox(s, cbCancelSeq, 0, 40, (void *)this);
 		}
 	}
-	
+
 	return;
 }
 
@@ -808,7 +808,7 @@ void PylonMFD::incParameter(void)
 			oapiOpenInputBox(s, cbActivateSeq, 0, 40, (void *)this);
 		}
 	}
-	
+
 	return;
 }
 
@@ -818,7 +818,7 @@ void PylonMFD::incParameter(void)
 bool cbCreateObject(void *id, char *str, void *data)
 {
 	PylonMFD *w = (PylonMFD *)data;
-	if (w == NULL) { return true;}	
+	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
 	w->selectCurrentAttachment();
@@ -878,10 +878,10 @@ bool cbCreateObject(void *id, char *str, void *data)
 		return true;
 	}
 	ATTACHMENTHANDLE objAtt = objInt->GetAttachmentHandle(true, 0);
-	
+
 	// Link the object to the focus vessel
 	CPylon::PylonAttach(w->focusH, obj, w->selectedAttachment, objAtt);
-	
+
 	if (w->objnameIndex>0) {
 		w->objectName[w->objnameIndex] = 0;
 	}
@@ -893,7 +893,7 @@ bool cbCreateObject(void *id, char *str, void *data)
 bool cbReleaseObject(void *id, char *str, void *data)
 {
 	PylonMFD *w = (PylonMFD *)data;
-	if (w == NULL) { return true;}	
+	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
 	w->selectCurrentParameter();
@@ -923,7 +923,7 @@ bool cbReleaseObject(void *id, char *str, void *data)
 bool cbAttachObject(void *id, char *str, void *data)
 {
 	PylonMFD *w = (PylonMFD *)data;
-	if (w == NULL) { return true;}	
+	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
 	w->selectCurrentAttachment();
@@ -934,7 +934,7 @@ bool cbAttachObject(void *id, char *str, void *data)
 
 	OBJHANDLE obj = oapiGetVesselByName(str);
 	if (obj==NULL) { sprintf(w->debugString,"[Attach]: Object doesn't exist.");return true;}
-	
+
 	VESSEL *objInt = oapiGetVesselInterface(obj);
 
 	// If there is no toparent attachment in the object, cancel operation
@@ -944,7 +944,7 @@ bool cbAttachObject(void *id, char *str, void *data)
 		return true;
 	}
 	ATTACHMENTHANDLE objAtt = objInt->GetAttachmentHandle(true, 0);
-	
+
 	// Link the object to the focus vessel
 	CPylon::PylonAttach(w->focusH, obj, w->selectedAttachment, objAtt);
 	return true;
@@ -954,7 +954,7 @@ bool cbAttachObject(void *id, char *str, void *data)
 bool cbDestroyObject(void *id, char *str, void *data)
 {
 	PylonMFD *w = (PylonMFD *)data;
-	if (w == NULL) { return true;}	
+	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
 	w->selectCurrentParameter();
@@ -972,7 +972,7 @@ bool cbDestroyObject(void *id, char *str, void *data)
 bool cbSetParam(void *id, char *str, void *data)
 {
 	PylonMFD *w = (PylonMFD *)data;
-	if (w == NULL) { return true;}	
+	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 	if (!w->selectCurrentParameter()) { sprintf(w->debugString,"[Value]: No parameter");return true;}
 	if (w->selSequence == -1) {
@@ -996,26 +996,26 @@ bool cbSetParam(void *id, char *str, void *data)
 bool cbActivateSeq(void *id, char *str, void *data)
 {
 	PylonMFD *w = (PylonMFD *)data;
-	if (w == NULL) { return true;}	
+	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 	if (!w->selectCurrentParameter()) { sprintf(w->debugString,"[Activate]: No sequence");return true;}
 	if (w->selSequence != -1) {
 		w->tempValue.type = PYL_PARAM_STRING;
 		strcpy(w->tempValue.strValue, str);
 		w->pchild->ActivateSequenceValue(w->selSequence, &(w->tempValue));
-	}	
+	}
 	return true;
 }
 bool cbCancelSeq(void *id, char *str, void *data)
 {
 	PylonMFD *w = (PylonMFD *)data;
-	if (w == NULL) { return true;}	
+	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 	if (!w->selectCurrentParameter()) { sprintf(w->debugString,"[Cancel]: No sequence");return true;}
 	if (w->selSequence != -1) {
 		w->tempValue.type = PYL_PARAM_STRING;
 		strcpy(w->tempValue.strValue, str);
 		w->pchild->CancelSequenceValue(w->selSequence, &(w->tempValue));
-	}	
+	}
 	return true;
 }

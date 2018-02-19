@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="PylonMFD" />
+		<Option pch_mode="2" />
+		<Option compiler="msvc8" />
+		<Build>
+			<Target title="Win32 Release">
+				<Option output="Release/PylonMFD" prefix_auto="1" extension_auto="1" />
+				<Option object_output="Release" />
+				<Option type="3" />
+				<Option compiler="msvc8" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="/MD" />
+					<Add option="/D_MBCS" />
+					<Add option="/O2" />
+					<Add option="/W3" />
+					<Add option="/EHsc" />
+					<Add option="/DWIN32" />
+					<Add option="/DNDEBUG" />
+					<Add option="/D_WINDOWS" />
+					<Add option="/D_USRDLL" />
+					<Add option="/DPYLONMFD_EXPORTS" />
+					<Add directory="../../../include" />
+					<Add directory="../pylon" />
+				</Compiler>
+				<Linker>
+					<Add option="/NODEFAULTLIB:LIBCMT" />
+					<Add library="kernel32" />
+					<Add library="user32" />
+					<Add library="gdi32" />
+					<Add library="winspool" />
+					<Add library="comdlg32" />
+					<Add library="advapi32" />
+					<Add library="shell32" />
+					<Add library="ole32" />
+					<Add library="oleaut32" />
+					<Add library="uuid" />
+					<Add library="odbc32" />
+					<Add library="odbccp32" />
+					<Add library="orbiter" />
+					<Add library="orbitersdk" />
+					<Add library="../../../lib/OrbiterSoundSDK40.lib" />
+					<Add directory="../../../lib" />
+				</Linker>
+			</Target>
+			<Target title="Win32 Debug">
+				<Option output="Z:/media/datos/MaquinasVirtuales/compartidoXP/Orbitersdk/samples/Pylon/pylonmfd/Debug/pylonmfd" prefix_auto="1" extension_auto="1" />
+				<Option object_output="Debug" />
+				<Option type="3" />
+				<Option compiler="msvc8" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="/MTd" />
+					<Add option="/W3" />
+					<Add option="/Gm" />
+					<Add option="/GX" />
+					<Add option="/ZI" />
+					<Add option="/Od" />
+					<Add option="/DWIN32" />
+					<Add option="/D_DEBUG" />
+					<Add option="/D_WINDOWS" />
+					<Add option="/D_MBCS" />
+					<Add option="/D_USRDLL" />
+					<Add option="/DPYLONMFD_EXPORTS" />
+					<Add option="/YX" />
+					<Add option="/FD" />
+					<Add option="/GZ" />
+					<Add option="/MD" />
+					<Add option="/FR" />
+					<Add directory="../../../include" />
+					<Add directory="../pylon" />
+				</Compiler>
+				<Linker>
+					<Add option="/dll" />
+					<Add option="/debug" />
+					<Add option="/machine:I386" />
+					<Add option="/pdbtype:sept" />
+					<Add option='/nodefaultlib:&quot;LIBCMT&quot;' />
+					<Add library="kernel32" />
+					<Add library="user32" />
+					<Add library="gdi32" />
+					<Add library="winspool" />
+					<Add library="comdlg32" />
+					<Add library="advapi32" />
+					<Add library="shell32" />
+					<Add library="ole32" />
+					<Add library="oleaut32" />
+					<Add library="uuid" />
+					<Add library="odbc32" />
+					<Add library="odbccp32" />
+					<Add library="orbiter" />
+					<Add library="orbitersdk" />
+					<Add directory="../../../lib" />
+				</Linker>
+				<ExtraCommands>
+					<Add after='copy debug\pylonMFD.dll &quot;F:\Orbiter Devel\Modules\Plugin\&quot;' />
+					<Add after='copy debug\pylonMFD.dll &quot;..\dist\Modules\Plugin\&quot;' />
+				</ExtraCommands>
+			</Target>
+		</Build>
+		<Unit filename="../pylon/PYLONSEQUENCE.CPP" />
+		<Unit filename="../pylon/cpylon.cpp" />
+		<Unit filename="pylonmfd.cpp" />
+		<Unit filename="pylonmfd.h" />
+		<Unit filename="random.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
