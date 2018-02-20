@@ -42,12 +42,11 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 
 	firstFrame = true;
 	firstFrameAttached = true;
+	inited = false;
 
 	mfdSelectedParameter = 0;
 
 	orbiterSoundId = -1;
-
-	this->visHandle = 0;
 
 	this->meshes = 0;
 }
@@ -169,43 +168,43 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 		int type = GetParameterType(p);
 		char *name = GetParameterName(p);
 		if ( type < PYL_PARAM_INTEGER ) {
-			sprintf(cbuf,"SET_PARAM \"%s\" %d",name,GetParamBol(p)?1:0);
+			_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SET_PARAM \"%s\" %d",name,GetParamBol(p)?1:0);
 		} else if ( type < PYL_PARAM_SCALAR ) {
-			sprintf(cbuf,"SET_PARAM \"%s\" %d",name,GetParamInt(p));
+			_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SET_PARAM \"%s\" %d",name,GetParamInt(p));
 		} else if ( type < PYL_PARAM_STRING ) {
-			sprintf(cbuf,"SET_PARAM \"%s\" %f",name,GetParamDbl(p));
+			_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SET_PARAM \"%s\" %f",name,GetParamDbl(p));
 		} else if ( type < PYL_PARAM_NOT_DEFINED ) {
-			sprintf(cbuf,"SET_PARAM \"%s\" \"%s\"",name,GetParamStr(p));
+			_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SET_PARAM \"%s\" \"%s\"",name,GetParamStr(p));
 		}
 
 		AddSequenceCmd(i, cbuf);
 	}
 
 	if ( !canNavigate ) {
-		sprintf(cbuf,"CAN_NAVIGATE \"%s\" 0",this->GetName());
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "CAN_NAVIGATE \"%s\" 0",this->GetName());
 		AddSequenceCmd(i, cbuf);
 	}
 	if ( !userParametersEnabled ) {
-		sprintf(cbuf,"USER_PARAMETERS_ENABLED \"%s\" 0",this->GetName());
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_PARAMETERS_ENABLED \"%s\" 0",this->GetName());
 		AddSequenceCmd(i, cbuf);
 	}
 	if ( !userReleaseEnabled ) {
-		sprintf(cbuf,"USER_RELEASE_ENABLED \"%s\" 0",this->GetName());
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_RELEASE_ENABLED \"%s\" 0",this->GetName());
 		AddSequenceCmd(i, cbuf);
 	}
 	if ( !userCreateEnabled ) {
-		sprintf(cbuf,"USER_CREATE_ENABLED \"%s\" 0",this->GetName());
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_CREATE_ENABLED \"%s\" 0",this->GetName());
 		AddSequenceCmd(i, cbuf);
 	}
 	if ( !userDestroyEnabled ) {
-		sprintf(cbuf,"USER_DESTROY_ENABLED \"%s\" 0",this->GetName());
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_DESTROY_ENABLED \"%s\" 0",this->GetName());
 		AddSequenceCmd(i, cbuf);
 	}
 	if ( actualizeNotPylonChilds ) {
-		sprintf(cbuf,"ACTUALIZE_NP_CHILDS_ENABLED \"%s\" 1",this->GetName());
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "ACTUALIZE_NP_CHILDS_ENABLED \"%s\" 1",this->GetName());
 		AddSequenceCmd(i, cbuf);
 	}
-	sprintf(cbuf,"CURRENT_MFD_PARAM\"%s\" %d",this->GetName(), this->GetMFDSelectedParameter());
+	_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "CURRENT_MFD_PARAM\"%s\" %d",this->GetName(), this->GetMFDSelectedParameter());
 	AddSequenceCmd(i, cbuf);
 
 	PylonSequence* seq = 0;
@@ -249,69 +248,39 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 // pos, dir and rot (if it is attached to something) and executes the active sequences.
 void CPylon::clbkPreStep (double simt, double simdt, double mjd)
 {
-	ATTACHMENTHANDLE top;
-	OBJHANDLE op;
 
     // TODO2018 remove!
 	ActualizeParent();
 
-//	if ( GetName()[0] != 'a' )
-//		sprintf(oapiDebugString(),"TIMESTEP 2: %s, %d",GetName(), this->parent);
+	if (attachmentToParent != NULL) {
+		SetAttachmentParams(attachmentToParent,pos,dir,rot);
+	}
 
+/*
+old code
 	bool f = firstFrame;
 	if (firstFrame) {
 		firstFrame = false;
-
-		ActualizeParent();
-
-		if (parent) {
-			VESSEL *r=parent;
-
-			double cm = GetEmptyMass();
-			op = NULL;
-			while (op==NULL) {
-				double rm = r->GetEmptyMass();
-				r->SetEmptyMass(rm + cm);
-				int	j=0, m= r->AttachmentCount(true);
-				while (j<m && op==NULL) {
-					top = r->GetAttachmentHandle(true, j);
-					op = r->GetAttachmentStatus(top);
-					j=j+1;
-				}
-				if (op==NULL) break;
-				r = oapiGetVesselInterface(op);
-				if (r==NULL) break;
-				op=NULL;
-			}
-		}
-		int n = GetSequenceCount();
-		TPylParamValue v; v.type = PYL_PARAM_NOT_DEFINED;
-		for (int i=0;i<n;i++) {
-			if (strcmp(GetSequenceName(i),"STATE\0")==0) {
-				SelectSequence(i);
-				curSeq->Call(&v, NULL);
-				curSeq->Execute();
-				v.type = PYL_PARAM_NOT_DEFINED;
-				curSeq->Cancel(&v);
-				break;
-			}
-		}
 	}
 	else
 		if (attachmentToParent != NULL) {
 		SetAttachmentParams(attachmentToParent,pos,dir,rot);
 	}
+*/
 /*	else
 	{
-		sprintf(oapiDebugString(),"TIMESTEP 1: %s",GetName());
+		_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"TIMESTEP 1: %s",GetName());
 	}
 bug: no deberian pasar por aqui, y parece que los childs en attachment 2,3,4 etc no se actualizan
-sprintf(oapiDebugString(),"CHUNGONOKO: %s",GetName());
+_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"CHUNGONOKO: %s",GetName());
 */
 
 
-	if (actualizeNotPylonChilds) {
-sprintf(oapiDebugString(),"CHUNGONOKO: %s",GetName());
+	if ( firstFrame && actualizeNotPylonChilds) {
+_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"CHUNGONOKO: %s",GetName());
+
+        ATTACHMENTHANDLE top;
+        OBJHANDLE op;
 
 		int n = AttachmentCount(false);
 		VESSEL *v;
@@ -323,31 +292,30 @@ sprintf(oapiDebugString(),"CHUNGONOKO: %s",GetName());
 				if (v==NULL) continue;
 				if (IsPylonVessel(v)!=NULL) continue;
 
-				if (f) {
-					VESSEL *r=this;
-					double cm = v->GetEmptyMass();
-					op = NULL;
-					while (op==NULL) {
-						double rm = r->GetEmptyMass();
-						r->SetEmptyMass(rm + cm);
-						int j=0, m= r->AttachmentCount(true);
-						while (j<m && op==NULL) {
-							top = r->GetAttachmentHandle(true, j);
-							op = r->GetAttachmentStatus(top);
-							j=j+1;
-						}
-						if (op==NULL) break;
-						r = oapiGetVesselInterface(op);
-						if (r==NULL) break;
-						op=NULL;
-					}
-				}
+                VESSEL *r=this;
+                double cm = v->GetEmptyMass();
+                op = NULL;
+                while (op==NULL) {
+                    double rm = r->GetEmptyMass();
+                    r->SetEmptyMass(rm + cm);
+                    int j=0, m= r->AttachmentCount(true);
+                    while (j<m && op==NULL) {
+                        top = r->GetAttachmentHandle(true, j);
+                        op = r->GetAttachmentStatus(top);
+                        j=j+1;
+                    }
+                    if (op==NULL) break;
+                    r = oapiGetVesselInterface(op);
+                    if (r==NULL) break;
+                    op=NULL;
+                }
 			}
 		}
 	}
 
 	if (sequences) sequences->Execute();
 
+	firstFrame = false;
 	firstFrameAttached = false;
 }
 
@@ -372,12 +340,11 @@ int CPylon::clbkConsumeBufferedKey (DWORD key, bool down, char *kstate)
 
 void CPylon::clbkPostCreation (void)
 {
-	orbiterSoundId = ConnectToOrbiterSoundDLL(GetHandle());
-}
 
-void CPylon::clbkVisualCreated (VISHANDLE vis, int refcount)
-{
-	this->visHandle = vis;
+	orbiterSoundId = ConnectToOrbiterSoundDLL(GetHandle());
+
+	this->initializePylon();
+
 }
 
 // ==============================================================
@@ -549,7 +516,7 @@ bool CPylon::IsParameterSet(int index)
 // Sequence management functions
 // ==============================================================
 void CPylon::SelectSequence(int i) {
-//sprintf(oapiDebugString(),"selseq1: i=%d,icurseq=%d",i,icurSeq);
+//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"selseq1: i=%d,icurseq=%d",i,icurSeq);
 /*
 todo quitar icurseq
 
@@ -559,7 +526,7 @@ todo quitar icurseq
 		while (i > 0 && icurSeq < numSeq) { curSeq = curSeq->nextSeq; i--; }
 /*	}
 if (curSeq==NULL) {
-sprintf(oapiDebugString(),"***********************************************************selseqERROR: i=%d,icurseq=%d",i,icurSeq);
+_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"***********************************************************selseqERROR: i=%d,icurseq=%d",i,icurSeq);
 curSeq=sequences;return;
 }
 */
@@ -609,7 +576,7 @@ int CPylon::CreateSequence(char *name, int type, int execmode) {
 
 	if(strcmp("STATE",name)==0) ns->activateByKey = false;
 
-	strcpy(ns->name, name);
+	strncpy_s(ns->name, NAME_SIZE, name, NAME_SIZE);
 	if (execmode<0) execmode = 0; if (execmode >= SEQ_MODE_LAST) execmode = SEQ_MODE_LAST-1;
 	ns->mode = execmode;
 	ns->value.type = type;
@@ -709,7 +676,7 @@ void CPylon::DeleteSequence(int index)
 			val = val->nextCmd;
 			delete oldVal;
 		}*/
-//sprintf(f,"%d,%d,%d",index,cmd,cmd->value.type);
+//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"%d,%d,%d",index,cmd,cmd->value.type);
 //oapiWriteScenario_string(scnr,"*****2",f);
 		PylonSequence *old= cmd;
 		cmd = cmd->nextCmd;
@@ -738,7 +705,7 @@ bool CPylon::ActivateSequenceByKey(DWORD key) {
 	PylonSequence *seq = sequences;
 	int i = 0;
 	while (seq) {
-//		sprintf(oapiDebugString(),"-(B2)tecla %d, i=%d, act=%d,seqkey=%d",key,i,seq->activateByKey?1:0, seq->activationKey);
+//		_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"-(B2)tecla %d, i=%d, act=%d,seqkey=%d",key,i,seq->activateByKey?1:0, seq->activationKey);
 		if (seq->activateByKey && seq->activationKey == key) {
 			ActivateSequence( i );
 			b = true;
@@ -866,7 +833,8 @@ bool CPylon::PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE par
 		if (prt==NULL) prt = (CPylonRT *)pp;
 
 		if (prt!=NULL) {
-sprintf(oapiDebugString(),"pylon detach 8,  prt=%s",prt->GetName());
+//commented 2018
+//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "pylon detach 8,  prt=%s",prt->GetName());
 
 			if (prt->rotAxis != PYL_RT_NO_ROTATION || prt->releaseAngVel != 0.0) {
 
@@ -992,7 +960,7 @@ CPylon * CPylon::IsPylonVessel(VESSEL *v) {
 //
 void CPylon::Changed(void)
 {
-//sprintf(oapiDebugString(),"Changed[%s]: parent = %s, root = %s, atttop = %d",GetName(),parent->GetName(),root->GetName(), attachmentToParent);
+//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "Changed[%s]: parent = %s, root = %s, atttop = %d",GetName(),parent->GetName(),root->GetName(), attachmentToParent);
 //	ActualizeSequences();
 }
 
@@ -1120,7 +1088,7 @@ void CPylon::ActualizeParent(void) {
 	VESSEL *v = oapiGetVesselInterface(o);
 	CPylon *p = CPylon::IsPylonVessel(v);
 
-//	sprintf(oapiDebugString(),"actualize parent: %s, parent=%s, i=%d, n=%d,o=%d,v=%s %f",GetName(), this->parent?this->parent->GetName():"NOPARENT", i,n,o, v?v->GetName():"NOVESSELPARENT", oapiGetSimTime());
+//	_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "actualize parent: %s, parent=%s, i=%d, n=%d,o=%d,v=%s %f",GetName(), this->parent?this->parent->GetName():"NOPARENT", i,n,o, v?v->GetName():"NOVESSELPARENT", oapiGetSimTime());
 
 //	this->parent = v;
 
@@ -1128,7 +1096,7 @@ void CPylon::ActualizeParent(void) {
 		PropagateChange(false, v);
 	}
 
-//	sprintf(oapiDebugString(),"actualize parent2: %s, parent=%s, i=%d, n=%d,o=%d, %f",GetName(), this->parent?this->parent->GetName():"NOPARENT", i,n,o, oapiGetSimTime());
+//	_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "actualize parent2: %s, parent=%s, i=%d, n=%d,o=%d, %f",GetName(), this->parent?this->parent->GetName():"NOPARENT", i,n,o, oapiGetSimTime());
 }
 
 bool CPylon::IsFirstFrame() {
@@ -1146,6 +1114,50 @@ int CPylon::GetMFDSelectedParameter()
 void CPylon::SetMFDSelectedParameter(int selectedParameter)
 {
 	mfdSelectedParameter = selectedParameter;
+}
+
+void CPylon::initializePylon() {
+
+    ActualizeParent();
+
+    if (parent) {
+        ATTACHMENTHANDLE top;
+        OBJHANDLE op;
+        VESSEL *r=parent;
+
+        double cm = GetEmptyMass();
+        op = NULL;
+        while (op==NULL) {
+            double rm = r->GetEmptyMass();
+            r->SetEmptyMass(rm + cm);
+            int	j=0, m= r->AttachmentCount(true);
+            while (j<m && op==NULL) {
+                top = r->GetAttachmentHandle(true, j);
+                op = r->GetAttachmentStatus(top);
+                j=j+1;
+            }
+            if (op==NULL) break;
+            r = oapiGetVesselInterface(op);
+            if (r==NULL) break;
+            op=NULL;
+        }
+    }
+
+    int n = GetSequenceCount();
+    TPylParamValue v; v.type = PYL_PARAM_NOT_DEFINED;
+    for (int i=0;i<n;i++) {
+        if (strcmp(GetSequenceName(i),"STATE\0")==0) {
+            SelectSequence(i);
+            curSeq->Call(&v, NULL);
+            curSeq->Execute();
+            v.type = PYL_PARAM_NOT_DEFINED;
+            curSeq->Cancel(&v);
+            break;
+        }
+    }
+
+    this->inited = true;
+
 }
 
 PylonMesh::PylonMesh()
@@ -1206,24 +1218,18 @@ void PylonMesh::Add(CPylon * p, unsigned char *filename, unsigned char *name, in
 		m = m->next;
 	}
 
-	_snprintf((char *)m->file, NAME_SIZE, "%s", filename);
-	_snprintf((char *)m->name, NAME_SIZE, "%s", name);
-
-	if ( ! p->visHandle )
-	{
-		return;
-	}
+	_snprintf_s((char *)m->file, NAME_SIZE, NAME_SIZE, "%s", filename);
+	_snprintf_s((char *)m->name, NAME_SIZE, NAME_SIZE, "%s", name);
 
 	if ( index != -1 )
 	{
-		m->meshIndex = index;
-		p->GetMesh(p->visHandle, index);
-		m->meshIndex = p->AddMesh( p->GetMesh(p->visHandle, index), &pos);
+	    p->InsertMesh( (const char *)filename, m->meshIndex, &pos );
 	}
 	else
-	{
-		m->meshIndex = p->AddMesh((const char *)filename, &pos);
-	}
+    {
+        m->meshIndex = p->AddMesh((const char *)filename, &pos);
+    }
+
 	p->SetMeshVisibilityMode( m->meshIndex, visMode );
 	m->visMode = visMode;
 }

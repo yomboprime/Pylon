@@ -1,7 +1,7 @@
 // ==============================================================
 //
 //  CPylonRT.cpp
-//  
+//
 //
 //	Generic pylon for performing rotation and traslation.
 //
@@ -25,11 +25,11 @@ CPylonRT::CPylonRT (OBJHANDLE hObj, int fmodel)
 
 	rotAxis = PYL_RT_NO_ROTATION;
 	hasTraslation = false;
-	
+
 	linAccel = 1, linVelMax = 5,
 	traslation0 = _V(-0.075,0,-2), traslation1 = _V(0.075,0,10);
 	angAccel = 2*PI/180.0, angVelMax = 20*PI/180.0, angMin = -PI, angMax = PI;
-	
+
 	releaseAngVel = 0;
 
 	clampEnabled = true;
@@ -121,7 +121,7 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 				if (dist != 0) newsignTgtAng = (dist < 0)?-1:1;
 				else newsignTgtAng = 0;
 				if (dist < 0) dist = -dist;
-				
+
 				if (clampEnabled) {
 					if (angRot < angMin) { angRot = angMin; }
 					if (angRot > angMax) { angRot = angMax; }
@@ -131,7 +131,7 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 					}
 				} else {
 					while (angRot >= PI) { angRot -= 2*PI; }
-					while (angRot < -PI) { angRot += 2*PI; }					
+					while (angRot < -PI) { angRot += 2*PI; }
 				}
 			}
 
@@ -219,7 +219,7 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 				if (dist != 0) newsignTgtTrasl = (dist < 0)?-1:1;
 				else newsignTgtTrasl = 0;
 				if (dist < 0) dist = -dist;
-				
+
 				if (clampEnabled) {
 					if (traslation < 0) { traslation = 0; }
 					if (traslation > traslationMod) { traslation = traslationMod; }
@@ -242,14 +242,14 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 			if (linAccel==0) {
 				traslation = traslSet;
 			} else {
-	
+
 				double signVel = linVel<0?-1:1;
 				double absVel = linVel<0?-linVel:linVel;
 				double signTgtPos = (traslSet - traslation < 0)?-1:1;
 				double dist = traslSet - traslation; if (dist < 0) dist = -dist;
-	
+
 				double forward = signTgtPos;
-	
+
 				if (linAccel > 0) {
 					if (signTgtPos*signVel==1) {
 						double distBrake = 0.5*linVel*linVel/linAccel;
@@ -266,7 +266,7 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 				traslation += linVel * dt;
 
 				double newsignTgtPos = (traslSet - traslation < 0)?-1:1;
-				
+
 				if (newsignTgtPos != signTgtPos) {
 					traslation = traslSet;
 					if (clampEnabled)
@@ -293,8 +293,8 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
     // D. Beachy: GROW THE STACK HERE SO WE CAN USE BOUNDSCHECKER FOR DEBUGGING
-    // I believe the reason we need this is because BoundsChecker (for this object) grows the stack more than 1 full page 
-    // at once, skipping over the guard page that Winvoid CPylonRT::clbkPreStep (double simt, double simdt, double mjd)dows places below the stack to grow it automatically.  
+    // I believe the reason we need this is because BoundsChecker (for this object) grows the stack more than 1 full page
+    // at once, skipping over the guard page that Winvoid CPylonRT::clbkPreStep (double simt, double simdt, double mjd)dows places below the stack to grow it automatically.
     // Therefore we will grow the stack here.
     // TODO: COMMENT THIS OUT once BoundsChecker debugging is complete
     int pageCount = 250;  // 250 4K pages = reserve 1 MB of stack
@@ -388,7 +388,7 @@ DLLCLBK int ovcConsumeBufferedKey (VESSEL *vessel, DWORD key, bool down, char *k
 // ==============================================================
 
 int CPylonRT::GetParameterCount(void)
-{	
+{
 	return PYL_RT_PARAM_COUNT + CPylon::GetParameterCount();
 }
 
@@ -499,7 +499,7 @@ bool CPylonRT::SetParamDbl(int index, double value)
 	if (index<0) return true;
 	if (index>PYL_RT_PARAM_COUNT)
 		return CPylon::SetParamDbl(index - PYL_RT_PARAM_COUNT, value);
-	
+
 	double signVel, absVel;
 
 	switch (index) {
@@ -519,25 +519,25 @@ bool CPylonRT::SetParamDbl(int index, double value)
 			break;
 		case  4:
 			linAccel = value;
-			doInit = true; 
+			doInit = true;
 			return true;
 		case  5:
 			linVelMax = value;
 			signVel = linVel<0?-1:1;
 			absVel = linVel<0?-linVel:linVel;
 			if (absVel > linVelMax) linVel = signVel * linVelMax;
-			doInit = true; 
+			doInit = true;
 			return true;
 		case  6:
 			angAccel = value*PI/180.0;
-			doInit = true; 
+			doInit = true;
 			return true;
 		case  7:
 			angVelMax = value*PI/180.0;
 			signVel = angVel<0?-1:1;
 			absVel = angVel<0?-angVel:angVel;
 			if (absVel > angVelMax) angVel = signVel * angVelMax;
-			doInit = true; 
+			doInit = true;
 			return true;
 		case  8:
 			angMin = value*PI/180.0;
@@ -547,7 +547,7 @@ bool CPylonRT::SetParamDbl(int index, double value)
 				if (angRot < angMin) { angRot = angMin; }
 				if (angRot > angMax) { angRot = angMax; }
 			}
-			doInit = true; 
+			doInit = true;
 			return true;
 		case  9:
 			angMax = value*PI/180.0;
@@ -557,7 +557,7 @@ bool CPylonRT::SetParamDbl(int index, double value)
 				if (angRot < angMin) { angRot = angMin; }
 				if (angRot > angMax) { angRot = angMax; }
 			}
-			doInit = true; 
+			doInit = true;
 			return true;
 		case 10: traslation0.x = value; actualizeTraslVectors(); return true;
 		case 11: traslation0.y = value; actualizeTraslVectors(); return true;
@@ -571,14 +571,14 @@ bool CPylonRT::SetParamDbl(int index, double value)
 				if (traslation < 0) { traslation = 0; }
 				if (traslation > traslationMod) { traslation = traslationMod; }
 			}
-			doInit = true; 
+			doInit = true;
 			return true;
 		case 18:
 			linVel = value;
 			signVel = linVel<0?-1:1;
 			absVel = linVel<0?-linVel:linVel;
 			if (absVel > linVelMax) linVel = signVel * linVelMax;
-			doInit = true; 
+			doInit = true;
 			return true;
 		case 19:
 			angRot = value*PI/180.0;
@@ -586,14 +586,14 @@ bool CPylonRT::SetParamDbl(int index, double value)
 				if (angRot < angMin) { angRot = angMin; }
 				if (angRot > angMax) { angRot = angMax; }
 			}
-			doInit = true; 
+			doInit = true;
 			return true;
 		case 20:
 			angVel = value*PI/180.0;
 			signVel = angVel<0?-1:1;
 			absVel = angVel<0?-angVel:angVel;
 			if (absVel > angVelMax) angVel = signVel * angVelMax;
-			doInit = true; 
+			doInit = true;
 			return true;
 		case 21:
 			releaseAngVel = value*PI/180.0;
@@ -603,7 +603,7 @@ bool CPylonRT::SetParamDbl(int index, double value)
 	return IsParameterSet(index);
 }
 
-bool CPylonRT::SetParamStr(int index, char *string) 
+bool CPylonRT::SetParamStr(int index, char *string)
 {
 	if (index<0) return true;
 	if (index>PYL_RT_PARAM_COUNT)
@@ -672,7 +672,7 @@ bool CPylonRT::IsParameterSet(int index)
 				if (angVelMax==fabs(angVel)) return true;
 				return false;
 			}
-		
+
 		case 1:
 			if (clampEnabled) {
 				return traslation == traslSet;

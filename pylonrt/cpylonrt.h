@@ -1,7 +1,7 @@
 // ==============================================================
 //
 //  CPylonRT.h
-//  
+//
 //
 //	Generic pylon for performing rotation and traslation.
 //
@@ -86,7 +86,7 @@ public:
 	// ==============================================================
 	// Pylon API
 	// ==============================================================
-	virtual int GetParameterCount(void);	
+	virtual int GetParameterCount(void);
 	virtual char *GetParameterName(int index);
 	virtual int GetParameterType(int index);
 	virtual bool IsUserParameter(int index);
@@ -94,28 +94,28 @@ public:
 	virtual bool GetParamBol(int index);
 	virtual int GetParamInt(int index);
 	virtual double GetParamDbl(int index);
-	virtual char *GetParamStr(int index); 
+	virtual char *GetParamStr(int index);
 
 	virtual bool SetParamBol(int index, bool value);
 	virtual bool SetParamInt(int index, int value);
 	virtual bool SetParamDbl(int index, double value);
-	virtual bool SetParamStr(int index, char *string); 
-	
+	virtual bool SetParamStr(int index, char *string);
+
 	virtual bool IncParam(int index);
 	virtual bool DecParam(int index);
 
-	virtual bool IsParameterSet(int index);	
+	virtual bool IsParameterSet(int index);
 	//virtual void Changed(void);
 
 	// --------- End of API ---------
 
 private:
-	
+
 	void actualizeTraslVectors(void);
 
 	// User parameters
 	double angRotSet, traslSet;
-	
+
 	// Sequence set parameters
 	int rotAxis;
 	bool hasTraslation;

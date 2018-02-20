@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-inline void randomize(void) { srand(time(NULL)); }
+inline void randomize(void) { srand((unsigned int)time(NULL)); }
 
 #define frand ( ( (double)rand() ) / RAND_MAX )
 

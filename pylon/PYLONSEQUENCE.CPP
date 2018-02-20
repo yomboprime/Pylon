@@ -39,12 +39,12 @@ PylonSequence::PylonSequence(bool mainSeq, void *owner) {
 	value.tempIndex = -1;
 
 	nextCmd = NULL;
-	nextSeq = NULL;	
+	nextSeq = NULL;
 }
 
 PylonSequence::~PylonSequence() {
 // todo: DOH! this destructor has nothing to do with other sequences so don't delete
-// nextSeq unless this is a sequence cmd, where nextSeq contains the parameters. So the 
+// nextSeq unless this is a sequence cmd, where nextSeq contains the parameters. So the
 // mainSequence flag must be checked for this. Copy the code of CPylon::DeleteSequence, the loop
 // where parameters are deleted (in case where a parameter is PYL_PARAM_GET_PARAMETER, its string value
 // must be deleted also)
@@ -59,7 +59,7 @@ PylonSequence::~PylonSequence() {
 
 void PylonSequence::Print(char *str, int strSize) {
 	if (mainSequence) {
-		int n = sprintf(str,"BEGINSEQ \"%s\"",name);
+		int n = _snprintf_s(str, NAME_SIZE, NAME_SIZE, "BEGINSEQ \"%s\"",name);
 		if (strSize < n) { *str = 0; return; }
 		str+= n; strSize-=n;
 		if (value.type==PYL_PARAM_NOT_DEFINED) {
@@ -70,49 +70,49 @@ void PylonSequence::Print(char *str, int strSize) {
 			strSize-=n+2;
 			*str=' ';str++;
 			*str='(';str++;
-			sprintf(str,"\"%s\"",PylonParamTypeName[value.type]);
+			_snprintf_s(str, NAME_SIZE, NAME_SIZE, "\"%s\"",PylonParamTypeName[value.type]);
 			str+= n + 2;
-			*str=')';str++;			
+			*str=')';str++;
 		}
 		n=0;
 		if (strSize < 5) { *str = 0; return; }
-		if (userSequence) n = sprintf(str," USER"); else n=0;
+		if (userSequence) n = _snprintf_s(str, NAME_SIZE, NAME_SIZE, " USER"); else n=0;
 		str+= n; strSize-=n;
-		if (strSize < 9) { *str = 0; return; } 
-		if (mode == SEQ_MODE_PARALLEL) n = sprintf(str," PARALLEL");
-		else if (mode == SEQ_MODE_WAIT_ONE) n = sprintf(str," WAIT_ONE");
+		if (strSize < 9) { *str = 0; return; }
+		if (mode == SEQ_MODE_PARALLEL) n = _snprintf_s(str, NAME_SIZE, NAME_SIZE, " PARALLEL");
+		else if (mode == SEQ_MODE_WAIT_ONE) n = _snprintf_s(str, NAME_SIZE, NAME_SIZE, " WAIT_ONE");
 		str+= n; strSize-=n;
 		*str = 0;
 
 	} else {
 		if (cmdcode != PYL_CMD_NOT_DEFINED) {
 			strSize--;
-			int n = sprintf(str,"%s",PylonCommands[cmdcode].name);
+			int n = _snprintf_s(str, NAME_SIZE, NAME_SIZE, "%s",PylonCommands[cmdcode].name);
 			str+= n; strSize-=n;
 		}
 		if (cmdcode == PYL_CMD_NOT_DEFINED || PylonCommands[cmdcode].numParams > 0) {
 			static char s[NAME_SIZE];
 
-			if (value.type == PYL_PARAM_GET_PARAMETER) 
-				sprintf(s,"?\"%s\"",name);
+			if (value.type == PYL_PARAM_GET_PARAMETER)
+				_snprintf_s(s, NAME_SIZE, NAME_SIZE, "?\"%s\"",name);
 			else if (value.type == PYL_PARAM_GENERATE_UNIFORM)
-				sprintf(s,"_U(%f,%f)",value.doubleArray[0],value.doubleArray[1]);
+				_snprintf_s(s, NAME_SIZE, NAME_SIZE, "_U(%f,%f)",value.doubleArray[0],value.doubleArray[1]);
 			else if (value.type == PYL_PARAM_GENERATE_NORMAL)
-				sprintf(s,"_N(%f,%f)",value.doubleArray[0],value.doubleArray[1]);
+				_snprintf_s(s, NAME_SIZE, NAME_SIZE, "_N(%f,%f)",value.doubleArray[0],value.doubleArray[1]);
 			else if (value.type == PYL_PARAM_THIS)
-				sprintf(s,"_THIS");
-			
-			else if (value.type < PYL_PARAM_INTEGER) sprintf(s, "%d", value.bolValue?1:0);
-			else if (value.type < PYL_PARAM_SCALAR) sprintf(s, "%d", value.intValue);
-			else if (value.type < PYL_PARAM_STRING) sprintf(s, "%f", value.dblValue);
-			//else if (value.type == PYL_PARAM_PARAMETER_NAME) sprintf(s,"\"%s:%s\"",((CPylon*)(value.tempRef))->GetName(),value.strValue);
-			//else if (value.type == PYL_PARAM_PARAMETER_NAME) sprintf(s,"\">OK>%s<<[%d]\"",value.strValue,value.tempRef);
-			//else if (value.type < PYL_PARAM_NOT_DEFINED) sprintf(s,"\">>%s<<[%d]\"",value.strValue,value.tempRef);
-			else if (value.type < PYL_PARAM_NOT_DEFINED) sprintf(s,"\"%s\"",value.strValue);
-			else sprintf(s,"#");
+				_snprintf_s(s, NAME_SIZE, NAME_SIZE, "_THIS");
+
+			else if (value.type < PYL_PARAM_INTEGER) _snprintf_s(s, NAME_SIZE, NAME_SIZE, "%d", value.bolValue?1:0);
+			else if (value.type < PYL_PARAM_SCALAR) _snprintf_s(s, NAME_SIZE, NAME_SIZE, "%d", value.intValue);
+			else if (value.type < PYL_PARAM_STRING) _snprintf_s(s, NAME_SIZE, NAME_SIZE, "%f", value.dblValue);
+			//else if (value.type == PYL_PARAM_PARAMETER_NAME) _snprintf_s(s, NAME_SIZE, NAME_SIZE, "\"%s:%s\"",((CPylon*)(value.tempRef))->GetName(),value.strValue);
+			//else if (value.type == PYL_PARAM_PARAMETER_NAME) _snprintf_s(s, NAME_SIZE, NAME_SIZE, "\">OK>%s<<[%d]\"",value.strValue,value.tempRef);
+			//else if (value.type < PYL_PARAM_NOT_DEFINED) _snprintf_s(s, NAME_SIZE, NAME_SIZE, "\">>%s<<[%d]\"",value.strValue,value.tempRef);
+			else if (value.type < PYL_PARAM_NOT_DEFINED) _snprintf_s(s, NAME_SIZE, NAME_SIZE, "\"%s\"",value.strValue);
+			else _snprintf_s(s, NAME_SIZE, NAME_SIZE, "#");
 			int n = strlen(s);
 			if (strSize < n+1) { *str = 0; return; }
-			sprintf(str," %s",s);
+			_snprintf_s(str, NAME_SIZE, NAME_SIZE, " %s",s);
 			str+= n+1; strSize-=n+1;
 		}
 		if (nextCmd==NULL || strSize==0) { *str = 0; return; }
@@ -141,7 +141,7 @@ char *PylonSequence::AddCmd(char *cmd, TPylParamValue &val) {
 	command->caller = this;
 
 	PylonSequence *param = command;
-	int n = PylonCommands[command->cmdcode].numParams;	
+	int n = PylonCommands[command->cmdcode].numParams;
 	for (int i=0;i<n;i++) {
 		if (i>0) {
 			param->nextCmd = new PylonSequence(false, owner);
@@ -155,7 +155,7 @@ char *PylonSequence::AddCmd(char *cmd, TPylParamValue &val) {
 			lastpos = GetToken(lastpos, val);
 			if (lastpos==NULL || val.type != PYL_PARAM_STRING) { param->valid = false; return NULL; }
 			param->name = new char[strlen(val.strValue)+1];
-			sprintf(param->name, "%s",val.strValue);
+			_snprintf_s(param->name, NAME_SIZE, NAME_SIZE, "%s",val.strValue);
 		} else if (val.type==PYL_PARAM_GENERATE_UNIFORM || val.type==PYL_PARAM_GENERATE_NORMAL) {
 			param->value.type = val.type;
 			lastpos = GetToken(lastpos, val);
@@ -186,7 +186,7 @@ char *PylonSequence::AddCmd(char *cmd, TPylParamValue &val) {
 			command->cmdcode == PYL_CMD_SET_SEQUENCE_KEY ) {
 /*char s[80];
 command->Print(s,80);
-sprintf(oapiDebugString(),"createSETCANCELSEQ: (%f)",oapiGetSimTime());
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "createSETCANCELSEQ: (%f)",oapiGetSimTime());
 */
 			command->activate = true;
 			command->Execute();
@@ -198,7 +198,7 @@ sprintf(oapiDebugString(),"createSETCANCELSEQ: (%f)",oapiGetSimTime());
 void PylonSequence::SetCancelSequence(PylonSequence *ps) {
 
 	if (!mainSequence) return;
-/*sprintf(oapiDebugString(),
+/*_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE,
 "setcancelseq()1: this=%s, canseq=%s",//, type=%d, strvalue=%s, tempidx=%d, tempref=%d, canseq=%s",
 name,ps->name);//,value.type, value.strValue, value.tempIndex, value.tempRef, ps?ps->name:"NOPS");
 */
@@ -220,7 +220,7 @@ name,ps->name);//,value.type, value.strValue, value.tempIndex, value.tempRef, ps
 bool PylonSequence::Call(TPylParamValue *val, PylonSequence *caller) {
 /*char s[NAME_SIZE];
 Print(s,NAME_SIZE);
-sprintf(oapiDebugString(),"CALL19: <%s> valt=%d,valstrvalue=%s",s,val->type,val->strValue);
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "CALL19: <%s> valt=%d,valstrvalue=%s",s,val->type,val->strValue);
 */
 	if (!mainSequence || !valid || activating || activate) return false;
 	if (value.type!=PYL_PARAM_NOT_DEFINED && val->type==PYL_PARAM_NOT_DEFINED) return false;
@@ -229,10 +229,10 @@ sprintf(oapiDebugString(),"CALL19: <%s> valt=%d,valstrvalue=%s",s,val->type,val-
 	if (nextCmd->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE && nextCmd->nextSeq==NULL ) return false;
 
 //bool b = CastValue(0, val);
-//sprintf(oapiDebugString(),"CALL22: <%s> valt=%d,valstrvalue=%s,casted:%d",s,val->type,val->strValue,b?1:0);
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "CALL22: <%s> valt=%d,valstrvalue=%s,casted:%d",s,val->type,val->strValue,b?1:0);
 	if (!CastValue(0, val)) return false;
 
-//sprintf(oapiDebugString(),"CALL20: <%s>"/*-> %d,%d,%d"*/,s);//,nextCmd->cmdcode,nextCmd->nextSeq,nextCmd->nextCmd);
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "CALL20: <%s>"/*-> %d,%d,%d"*/,s);//,nextCmd->cmdcode,nextCmd->nextSeq,nextCmd->nextCmd);
 
 	this->caller = caller;
 	activate = true;
@@ -242,21 +242,21 @@ sprintf(oapiDebugString(),"CALL19: <%s> valt=%d,valstrvalue=%s",s,val->type,val-
 }
 bool PylonSequence::Cancel(TPylParamValue *val) {
 	if (!mainSequence || !valid || cancelling || cancel) return false;
-//sprintf(oapiDebugString(),"CANCEL10: valid=%d, nextcmdcode=%s,cancelseq=%s",nextCmd?(nextCmd->valid?1:0):-1, nextCmd?PylonCommands[nextCmd->cmdcode].name:"NOCMD", nextCmd->value.tempRef?((PylonSequence*)nextCmd->value.tempRef)->name:"NOTEMPREF");
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "CANCEL10: valid=%d, nextcmdcode=%s,cancelseq=%s",nextCmd?(nextCmd->valid?1:0):-1, nextCmd?PylonCommands[nextCmd->cmdcode].name:"NOCMD", nextCmd->value.tempRef?((PylonSequence*)nextCmd->value.tempRef)->name:"NOTEMPREF");
 
 	this->caller = NULL;
 	cancel= true;
 	finished = false;
 	cancelling = true;
 
-	
+
 	PylonSequence *p = nextCmd;
 	if (p!=NULL && p->cmdcode==PYL_CMD_SET_CANCEL_SEQUENCE && p->valid) {
 
 		if (((PylonSequence*)(p->value.tempRef))->value.type!=PYL_PARAM_NOT_DEFINED && val->type==PYL_PARAM_NOT_DEFINED) {
 			return false;
 		}
-/*sprintf(oapiDebugString(),"CANCEL12: cancelseq=%s,cancelseqtype=%d,valtype=%d",
+/*_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "CANCEL12: cancelseq=%s,cancelseqtype=%d,valtype=%d",
 		p->value.tempRef?((PylonSequence*)p->value.tempRef)->name:"NOTEMPREF",
 		((PylonSequence*)(p->value.tempRef))->value.type,
 		val->type);
@@ -274,7 +274,7 @@ bool PylonSequence::Execute(void) {
 		}
 
 //Print(s,NAME_SIZE);
-//sprintf(oapiDebugString(),"Exec mainseq2: %s, mode=%d,activ=%d,type=%d,strvalue=%s",s,mode,activate?1:0,value.type,value.strValue);
+//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "Exec mainseq2: %s, mode=%d,activ=%d,type=%d,strvalue=%s",s,mode,activate?1:0,value.type,value.strValue);
 
 			if (activate) {
 
@@ -287,9 +287,9 @@ bool PylonSequence::Execute(void) {
 				}
 				activate = false; activating = true; cancelling = false;
 				finishedcommand = false;
-				
+
 				if (mode > SEQ_MODE_SEQUENTIAL) {
-//sprintf(oapiDebugString(),"%s: PARALLEL Activate: (%f)",name,oapiGetSimTime());
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "%s: PARALLEL Activate: (%f)",name,oapiGetSimTime());
 					PylonSequence *ps = nextCmd;
 					if (ps && ps->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE)
 						ps = ps->nextSeq;
@@ -316,12 +316,12 @@ bool PylonSequence::Execute(void) {
 						ps = ps->nextSeq;
 					}
 					if (term) {
-//sprintf(oapiDebugString(),"Ejec1: %s term (%f)",name,oapiGetSimTime());
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "Ejec1: %s term (%f)",name,oapiGetSimTime());
 						finishedcommand = true;
 						finished = true;
 						activating = false;
 						cancelling = false;
-					} 
+					}
 				} else {
 					cmdcurrent = nextCmd;
 					if (cmdcurrent && cmdcurrent->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE)
@@ -349,7 +349,7 @@ bool PylonSequence::Execute(void) {
 
 			if (cancel) {
 //3
-//sprintf(oapiDebugString(),"%s: Cancel1 (%f)",name,oapiGetSimTime());
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "%s: Cancel1 (%f)",name,oapiGetSimTime());
 				Terminate();
 				finished = false;
 				cancelling = true;
@@ -357,7 +357,7 @@ bool PylonSequence::Execute(void) {
 
 			if (activating) {
 				if (mode > SEQ_MODE_SEQUENTIAL) {
-//sprintf(oapiDebugString(),"%s: PARALLEL ActivatING: (%f)",name,oapiGetSimTime());
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "%s: PARALLEL ActivatING: (%f)",name,oapiGetSimTime());
 					PylonSequence *ps = nextCmd;
 					if (ps && ps->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE)
 						ps = ps->nextSeq;
@@ -398,7 +398,7 @@ bool PylonSequence::Execute(void) {
 					while (cmdcurrent) {
 						if (cmdcurrent->valid) {
 							if (cmdcurrent->Execute()) {
-//								sprintf(oapiDebugString(),"param ejecutado: cmd=%d, strValue=%s",cmdcurrent->cmdcode, cmdcurrent->nextCmd?cmdcurrent->nextCmd->value.strValue:"no cmd");
+//								_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "param ejecutado: cmd=%d, strValue=%s",cmdcurrent->cmdcode, cmdcurrent->nextCmd?cmdcurrent->nextCmd->value.strValue:"no cmd");
 								cmdcurrent = cmdcurrent->nextSeq;
 								if (cmdcurrent) {
 									cmdcurrent->finished = false;
@@ -417,7 +417,7 @@ bool PylonSequence::Execute(void) {
 				}
 
 			} else if (cancelling) {
-//sprintf(oapiDebugString(),"%s: Cancelling (%f)",name,oapiGetSimTime());
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "%s: Cancelling (%f)",name,oapiGetSimTime());
 				PylonSequence *p = nextCmd;
 				if (p && p->cmdcode==PYL_CMD_SET_CANCEL_SEQUENCE && p->valid) {
 					if (((PylonSequence*)p->value.tempRef)->finished) {
@@ -455,7 +455,7 @@ bool PylonSequence::Execute(void) {
 			PylonMesh *pmesh;
 
 //Print(strTemp,NAME_SIZE);
-//sprintf(oapiDebugString(),"Ejec cmd: %s>%s (%f)",caller->name,strTemp,oapiGetSimTime());
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "Ejec cmd: %s>%s (%f)",caller->name,strTemp,oapiGetSimTime());
 
 			if (activate) {
 				int np = PylonCommands[cmdcode].numParams; i=0;
@@ -522,7 +522,7 @@ bool PylonSequence::Execute(void) {
 							return !p->ActivateSequenceValue(value.tempIndex, v);
 						}
 					} else {
-//sprintf(oapiDebugString(),"EjecCALL: %s:%d, active=%d (%f)",p->GetName(),value.tempIndex,p->IsSequenceActive(value.tempIndex)?1:0,oapiGetSimTime());
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "EjecCALL: %s:%d, active=%d (%f)",p->GetName(),value.tempIndex,p->IsSequenceActive(value.tempIndex)?1:0,oapiGetSimTime());
 						return !p->IsSequenceActive(value.tempIndex);
 					}
 					return true;
@@ -583,7 +583,7 @@ bool PylonSequence::Execute(void) {
 				case PYL_CMD_SKIP_IF_NOT: return true; //bool
 				case PYL_CMD_RESET_IF: return true; //bool
 				case PYL_CMD_RESET_IF_NOT: return true; //boo
-					
+
 				// Time events
 
 				/*
@@ -661,7 +661,7 @@ bool PylonSequence::Execute(void) {
 					d = ves->GetThrusterLevel(thrustH);
 					return d >= nextCmd->nextCmd->value.dblValue;
 
-				// Setting vessel status				
+				// Setting vessel status
 				/*
 					ATTACH vessel(parent) int(tochild) int(toparent) vessel(child)
 				*/
@@ -686,7 +686,7 @@ bool PylonSequence::Execute(void) {
 					dw2 = nextCmd->nextCmd->value.intValue;
 					ves = (VESSEL*)value.tempRef;
 					ves2 = (VESSEL*)(nextCmd->nextCmd->nextCmd->value.tempRef);
-					
+
 					ves2->GetAttachmentParams(ves2->GetAttachmentHandle(true, dw2), vector[0], vector[1], vector[2]);
 					ves2->Local2Global(vector[0], vector[3]);
 					ves->GetAttachmentParams(ves->GetAttachmentHandle(false, dw), vector[0], vector[1], vector[2]);
@@ -715,7 +715,7 @@ bool PylonSequence::Execute(void) {
 					dw2 = nextCmd->nextCmd->value.intValue;
 					ves = (VESSEL*)value.tempRef;
 					ves2 = (VESSEL*)(nextCmd->nextCmd->nextCmd->value.tempRef);
-					
+
 					ves2->GetAttachmentParams(ves2->GetAttachmentHandle(true, dw2), vector[0], vector[1], vector[2]);
 					ves2->Local2Global(vector[0], vector[3]);
 					ves->GetAttachmentParams(ves->GetAttachmentHandle(false, dw), vector[0], vector[1], vector[2]);
@@ -727,7 +727,7 @@ bool PylonSequence::Execute(void) {
 					if ( d2 <= d )
 					{
 						d = cos( RAD * nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->value.dblValue );
-						
+
 						ves2->GetAttachmentParams(ves2->GetAttachmentHandle(true, dw2), vector[0], vector[1], vector[2]);
 						ves2->GlobalRot(vector[1], vector[3]);
 						ves->GetAttachmentParams(ves->GetAttachmentHandle(false, dw), vector[0], vector[1], vector[2]);
@@ -780,7 +780,7 @@ bool PylonSequence::Execute(void) {
 						i++;
 					}
 					if (i>=n) return true;
-//sprintf(oapiDebugString(),"RELEASE1: vel=%f",nextCmd->value.dblValue);
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "RELEASE1: vel=%f",nextCmd->value.dblValue);
 					CPylon::PylonDetach(obj2H, objH, attH, nextCmd->value.dblValue);
 					return true;
 				/*
@@ -822,10 +822,10 @@ bool PylonSequence::Execute(void) {
 						if ( oapiGetVesselByName( c ) != 0 ) {
 
 							i = 1;
-							sprintf(strTemp, "%s_%d", c, i);
+							_snprintf_s(strTemp, NAME_SIZE, NAME_SIZE, "%s_%d", c, i);
 							while ( oapiGetVesselByName( strTemp ) != 0 ) {
 								i++;
-								sprintf(strTemp, "%s_%d", c, i);
+								_snprintf_s(strTemp, NAME_SIZE, NAME_SIZE, "%s_%d", c, i);
 							}
 
 							c = strTemp;
@@ -912,7 +912,7 @@ bool PylonSequence::Execute(void) {
 					dw = nextCmd->value.intValue;
 					ves2 = (VESSEL*)(nextCmd->nextCmd->value.tempRef);
 					dw2 = nextCmd->nextCmd->nextCmd->value.intValue;
-sprintf(oapiDebugString(),"TRANSFER_FUEL (t=%f): %s:%d -> %s:%d", oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2);
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL (t=%f): %s:%d -> %s:%d", oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2);
 
 					if ( activate)
 					{
@@ -940,13 +940,13 @@ sprintf(oapiDebugString(),"TRANSFER_FUEL (t=%f): %s:%d -> %s:%d", oapiGetSimTime
 					value.tempDbl -= d;
 					ves->SetPropellantMass(propH, d2 - d);
 
-sprintf(oapiDebugString(),"TRANSFER_FUEL8 (t=%f): %s:%d -> %s:%d, cant=%f, d=%f, ves1F=%f",
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL8 (t=%f): %s:%d -> %s:%d, cant=%f, d=%f, ves1F=%f",
 oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2,
 value.tempDbl, d, ves->GetPropellantMass(propH));
 
 					propH = ves->GetPropellantHandleByIndex(dw2);
 					ves2->SetPropellantMass(propH, ves2->GetPropellantMass(propH) + d);
-//sprintf(oapiDebugString(),"TRANSFER_FUEL9 (t=%f): %s:%d -> %s:%d, cant=%f, d=%f, ves2F=%f",
+//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL9 (t=%f): %s:%d -> %s:%d, cant=%f, d=%f, ves2F=%f",
 //oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2,
 //value.tempDbl, d, ves2->GetPropellantMass(propH));
 
@@ -958,7 +958,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 		 		*/
 				case PYL_CMD_SET_MAIN_THRUST:
 					ves = (VESSEL*)(value.tempRef);
-					
+
 					if ( oapiGetSimStep() <= 0 || nextCmd->nextCmd->value.dblValue <= 0 ) return true;
 					d = nextCmd->nextCmd->value.dblValue * oapiGetSimStep();
 
@@ -977,7 +977,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 						if ( d < nextCmd->value.dblValue ) d = nextCmd->value.dblValue;
 					}
 					ves->SetThrusterGroupLevel(THGROUP_MAIN, d);
-					
+
 					if ( d - nextCmd->value.dblValue != 0 ) return false;
 					return true;
 
@@ -986,7 +986,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 				*/
 				case PYL_CMD_SET_RETRO_THRUST:
 					ves = (VESSEL*)(value.tempRef);
-					
+
 					if ( oapiGetSimStep() <= 0 || nextCmd->nextCmd->value.dblValue <= 0 ) return true;
 					d = nextCmd->nextCmd->value.dblValue * oapiGetSimStep();
 
@@ -1005,7 +1005,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 						if ( d < nextCmd->value.dblValue ) d = nextCmd->value.dblValue;
 					}
 					ves->SetThrusterGroupLevel(THGROUP_RETRO, d);
-					
+
 					if ( d - nextCmd->value.dblValue != 0 ) return false;
 					return true;
 
@@ -1014,7 +1014,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 				*/
 				case PYL_CMD_SET_HOVER_THRUST:
 					ves = (VESSEL*)(value.tempRef);
-					
+
 					if ( oapiGetSimStep() <= 0 || nextCmd->nextCmd->value.dblValue <= 0 ) return true;
 					d = nextCmd->nextCmd->value.dblValue * oapiGetSimStep();
 
@@ -1033,7 +1033,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 						if ( d < nextCmd->value.dblValue ) d = nextCmd->value.dblValue;
 					}
 					ves->SetThrusterGroupLevel(THGROUP_HOVER, d);
-					
+
 					if ( d - nextCmd->value.dblValue != 0 ) return false;
 					return true;
 
@@ -1056,7 +1056,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 					ves = (VESSEL*)(value.tempRef);
 					dw = nextCmd->value.intValue;
 					ves2 = (VESSEL*)(nextCmd->nextCmd->value.tempRef);
-					
+
 					if (dw < 0 || dw >= ves->GetThrusterCount()) return true;
 					thrustH = ves->GetThrusterHandleByIndex(dw);
 					if ( !thrustH ) return true;
@@ -1081,8 +1081,8 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 					ves->SetCameraOffset(
 						_V(nextCmd->value.dblValue, nextCmd->nextCmd->value.dblValue,nextCmd->nextCmd->nextCmd->value.dblValue));
 					return true;
-					
-				case PYL_CMD_CREATE_ATTACHMENT: return true;  // vessel id x y x dx dy dz rx ry rz loose(bool)			
+
+				case PYL_CMD_CREATE_ATTACHMENT: return true;  // vessel id x y x dx dy dz rx ry rz loose(bool)
 				case PYL_CMD_SET_TOCHILD_ATT: return true; // vessel attindex x y x dx dy dz rx ry rz loose(bool)
 
 				/*
@@ -1118,7 +1118,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 
 					if ( RequestLoadVesselWave( ((CPylon*)this->owner)->GetOrbiterSoundId(), i, value.strValue, EXTENDEDPLAY(n) ) )
 					{
-						sprintf(((CPylon*)this->owner)->soundNames[i-1].soundName, "%s", nextCmd->value.strValue );
+						_snprintf_s(((CPylon*)this->owner)->soundNames[i-1].soundName, NAME_SIZE, NAME_SIZE, "%s", nextCmd->value.strValue );
 					}
 					return true;
 
@@ -1245,7 +1245,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 						pmesh->Clear();
 						delete pmesh;
 						((CPylon*)this->owner)->meshes = 0;
-						
+
 					}
 					return true;
 
@@ -1338,7 +1338,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 						if ( d < d3 ) d = d3;
 					}
 					oapiCameraSetAperture(d);
-					
+
 					if ( d - d3 != 0 ) return false;
 					return true;
 
@@ -1353,7 +1353,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 
 				default: return true;
 			}
-		}	
+		}
 }
 
 
@@ -1364,12 +1364,12 @@ bool PylonSequence::CastValue(int cmdType, TPylParamValue *val) {
 
 //4
 /*if (!mainSequence&&cmdType==19)
-sprintf(oapiDebugString(),
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE,
 "CAST: selfvalt=%d,selfvalSTRv='%s',cmdt=%d, valt=%d, valstrvalue=%s",
 value.type,value.strValue, cmdType,val?val->type:-1,val?val->strValue:"noval");
 */
 	if (mainSequence) {
-		
+
 		if (value.type==PYL_PARAM_NOT_DEFINED) return true;
 		else {
 			source = val;
@@ -1416,7 +1416,7 @@ value.type,value.strValue, cmdType,val?val->type:-1,val?val->strValue:"noval");
 				else if (sourceType < PYL_PARAM_STRING)
 					value.dblValue = pylon->GetParamDbl(i);
 				else if (sourceType < PYL_PARAM_NOT_DEFINED)
-					sprintf(value.strValue, pylon->GetParamStr(value.tempIndex));
+					_snprintf_s(value.strValue, NAME_SIZE, NAME_SIZE, pylon->GetParamStr(value.tempIndex));
 				else return false;
 			break;
 
@@ -1430,7 +1430,7 @@ value.type,value.strValue, cmdType,val?val->type:-1,val?val->strValue:"noval");
 		// PYL_PARAM_THIS_VESSEL
 		// (cmdType==PYL_PARAM_PARAMETER_NAME)
 		//	sourceType = PYL_PARAM_PARAMETER_NAME
-		//	
+		//
 		//if (cmdType==PYL_PARAM_PARAMETER_NAME)
 		//	sourceType = PYL_PARAM_PARAMETER_NAME
 
@@ -1442,9 +1442,9 @@ value.type,value.strValue, cmdType,val?val->type:-1,val?val->strValue:"noval");
 	}
 	if (source == &value) {
 /*if (!mainSequence&&cmdType==19)
-sprintf(oapiDebugString(),
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE,
 "CAST4: selfvalt=%d,selfvalSTRv='%s',cmdt=%d, sorcetype=%d,sourcestrval='%s'",
-value.type,value.strValue, 
+value.type,value.strValue,
 cmdType,sourceType,source->strValue);
 */
 		if (cmdType > PYL_PARAM_STRING && cmdType < PYL_PARAM_NOT_DEFINED) {
@@ -1455,9 +1455,9 @@ cmdType,sourceType,source->strValue);
 
 	bool b = ConvertValue(cmdType, sourceType, source, true);
 /*if (!mainSequence&&cmdType==19)
-sprintf(oapiDebugString(),
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE,
 "CAST5: selfvalt=%d,selfvalSTRv='%s',cmdt=%d, sorcetype=%d,sourcestrval='%s', convert:%d",
-value.type,value.strValue, 
+value.type,value.strValue,
 cmdType,sourceType,source->strValue,b?1:0);
 */
 	return b;//ConvertValue(cmdType, sourceType, source, true);
@@ -1468,7 +1468,7 @@ bool PylonSequence::ConvertValue(int destType, int sourceType, TPylParamValue *s
 
 //5
 /*if (!mainSequence&&destType==0)
-sprintf(oapiDebugString(),"convertValue:  dtyp %d styp %d dblval= %f,conv=%d",
+_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "convertValue:  dtyp %d styp %d dblval= %f,conv=%d",
 		destType, sourceType, source->dblValue,conv?1:0);
 */
 	// Boolean
@@ -1500,20 +1500,20 @@ sprintf(oapiDebugString(),"convertValue:  dtyp %d styp %d dblval= %f,conv=%d",
 	}
 	// String types:
 	if (destType < PYL_PARAM_NOT_DEFINED) {
-		if (sourceType < PYL_PARAM_INTEGER) sprintf(value.strValue, "%s", &PylonBoolParamTypeName[sourceType][source->bolValue][0]);
-		else if (sourceType < PYL_PARAM_SCALAR) sprintf(value.strValue, "%d", source->intValue);
-		else if (sourceType < PYL_PARAM_STRING) sprintf(value.strValue, "%f", source->dblValue);
+		if (sourceType < PYL_PARAM_INTEGER) _snprintf_s(value.strValue, NAME_SIZE, NAME_SIZE, "%s", &PylonBoolParamTypeName[sourceType][source->bolValue][0]);
+		else if (sourceType < PYL_PARAM_SCALAR) _snprintf_s(value.strValue, NAME_SIZE, NAME_SIZE, "%d", source->intValue);
+		else if (sourceType < PYL_PARAM_STRING) _snprintf_s(value.strValue, NAME_SIZE, NAME_SIZE, "%f", source->dblValue);
 		else if (sourceType < PYL_PARAM_NOT_DEFINED) {
-			if (conv) strcpy(value.strValue, source->strValue);
-			
+			if (conv) strncpy_s(value.strValue, NAME_SIZE, source->strValue, NAME_SIZE);
+
 //5if (!mainSequence&&destType==19)
-//sprintf(oapiDebugString(),"convertValue2:  dtyp %d styp %d strval=%s,conv=%d,valuetype=%d,valuestrvalue=%s",
+//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "convertValue2:  dtyp %d styp %d strval=%s,conv=%d,valuetype=%d,valuestrvalue=%s",
 //		destType, sourceType, source->strValue,conv?1:0,value.type,value.strValue);
 
 			if (destType > PYL_PARAM_STRING && doValidate) {
 				bool validated=Validate(destType, sourceType);
 //5if (!mainSequence&&destType==19)
-//sprintf(oapiDebugString(),"convertValue3:  dtyp %d styp %d strval=%s,conv=%d,valuetype=%d,valuestrvalue=%s, validated=%d",
+//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "convertValue3:  dtyp %d styp %d strval=%s,conv=%d,valuetype=%d,valuestrvalue=%s, validated=%d",
 //		destType, sourceType, source->strValue,conv?1:0,value.type,value.strValue,validated?1:0);
 
 				return validated;
@@ -1523,10 +1523,10 @@ sprintf(oapiDebugString(),"convertValue:  dtyp %d styp %d dblval= %f,conv=%d",
 	}
 	return false;
 }
-	
+
 bool PylonSequence::Validate(int destType, int srcType) {
 	if (mainSequence) return false;
-//5sprintf(oapiDebugString(),"Validate: cmdt:%d,  srctype:%d, valuestrvalue=%s",destType,srcType,value.strValue);
+//5_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "Validate: cmdt:%d,  srctype:%d, valuestrvalue=%s",destType,srcType,value.strValue);
 	if (destType == PYL_PARAM_NOT_DEFINED) destType = srcType;
 	if (destType > PYL_PARAM_STRING && destType < PYL_PARAM_NOT_DEFINED) {
 
@@ -1562,7 +1562,7 @@ bool PylonSequence::Validate(int destType, int srcType) {
 			case PYL_PARAM_PARAMETER_NAME:
 				c = value.strValue; cc = &tempstr[0];
 				while (*c!=0 && *c!=':') { *cc++ = *c++;}
-				
+
 				if (*c==0) { //return false;
 					value.tempRef = (void *)owner;
 					c = value.strValue;
@@ -1575,7 +1575,7 @@ bool PylonSequence::Validate(int destType, int srcType) {
 						value.tempRef = (void *)CPylon::IsPylonVessel(oapiGetVesselInterface(oh));
 					}
 				}//
-				
+
 /*				if (*c==0) return false;
 				*cc = 0; c++; if (*c==0) return false;
 				if (cc==tempstr) value.tempRef = owner;

@@ -1,7 +1,7 @@
 // ==============================================================
 //
 //  CPylon.h
-//  
+//
 //	ORBITER Vessel Interface
 //
 //	Author: Juan Jose Luna
@@ -50,22 +50,20 @@ public:
 	// VESSEL2 callbacks
 	// ==============================================================
 
-	void clbkPostCreation(void);
-	void clbkVisualCreated (VISHANDLE vis, int refcount);
-    
+	virtual void clbkPostCreation(void);
     virtual void clbkLoadStateEx (FILEHANDLE scn, void *status);
     virtual void clbkSaveState (FILEHANDLE scn);
     virtual void clbkPreStep (double simt, double simdt, double mjd);
     virtual int clbkConsumeBufferedKey (DWORD key, bool down, char *kstate);
 
-    
+
 	// ==============================================================
 	// Pylon API
 	// ==============================================================
 
 	// Pylon paramaters management. Every CPylon subclass must override these functions
 
-	virtual int GetParameterCount(void);	
+	virtual int GetParameterCount(void);
 	virtual char *GetParameterName(int index);
 	virtual int GetParameterType(int index);
 	virtual bool IsUserParameter(int index);
@@ -73,18 +71,18 @@ public:
 	virtual bool GetParamBol(int index);
 	virtual int GetParamInt(int index);
 	virtual double GetParamDbl(int index);
-	virtual char *GetParamStr(int index); 
+	virtual char *GetParamStr(int index);
 
 	virtual bool SetParam(int index, TPylParamValue *value);
 	virtual bool SetParamBol(int index, bool value);//devolver bool que indica si ya ha terminado na mas. , PylSequence *caller = NULL);
 	virtual bool SetParamInt(int index, int value);//, PylSequence *caller = NULL);
 	virtual bool SetParamDbl(int index, double value);//, PylSequence *caller = NULL);
 	virtual bool SetParamStr(int index, char *string);//, PylSequence *caller = NULL);
-	
+
 	virtual bool IncParam(int index);//, PylSequence *caller = NULL);
 	virtual bool DecParam(int index);//, PylSequence *caller = NULL);
 
-	virtual bool IsParameterSet(int index);	
+	virtual bool IsParameterSet(int index);
 
 	// Common properties of pylons
 	bool canNavigate,
@@ -109,7 +107,7 @@ public:
 	char *AddSequenceCmd(int index, char *cmd);
 	bool IsSequenceValid(int index);
 	bool ActivateSequence(int index);
-	bool ActivateSequenceValue(int index, TPylParamValue *value); 
+	bool ActivateSequenceValue(int index, TPylParamValue *value);
 	bool CancelSequence(int index);
 	bool CancelSequenceValue(int index, TPylParamValue *value);
 	bool IsSequenceActive(int index);
@@ -141,7 +139,7 @@ public:
 	bool IsConnected(VESSEL *v, VESSEL *root, VESSEL *parent);
 	bool IsFirstFrame();
 	bool IsFirstFrameAttached();
-	
+
 	// --------- End of API ---------
 
 	int GetMFDSelectedParameter();
@@ -154,6 +152,9 @@ private:
 	ATTACHMENTHANDLE attachmentToParent;
 	PylonSequence *sequences;
 	int numSeq, icurSeq; PylonSequence *curSeq;
+	bool inited;
+
+	void initializePylon(void);
 	void RecursivePropagateChange(VESSEL *root, VESSEL *parent);
 	void ActualizeParent(void);
 	void SelectSequence(int i);
