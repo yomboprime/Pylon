@@ -23,7 +23,7 @@ CPylonRT::CPylonRT (OBJHANDLE hObj, int fmodel)
 {
 	angRotSet = 0, traslSet = 0;
 
-	rotAxis = PYL_RT_NO_ROTATION;
+	rotAxis = PYL_RT_ROTATION_X;
 	hasTraslation = false;
 
 	linAccel = 1, linVelMax = 5,
