@@ -1,4 +1,4 @@
-
+//	Distributed MIT licensed. See License.txt
 
 #ifndef __PYLONSEQUENCE_H
 #define __PYLONSEQUENCE_H

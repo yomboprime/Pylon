@@ -63,6 +63,12 @@ PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
 
 	showCommands = 0;
 
+	strvel[0]=0;
+	objnameIndex = 0;
+	*objectName=0;
+	className[0]=0;
+	debugString[0]=0;
+
 	initfocusH = oapiGetFocusObject();
 	if (initfocusH==NULL)
 		initfocus = NULL;
@@ -70,13 +76,25 @@ PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
 		initfocus = oapiGetVesselInterface(initfocusH);
 	focusH = initfocusH;
 	focus = initfocus;
-	if (focus->AttachmentCount(false)>0)
-		selectedAttachment = focus->GetAttachmentHandle(false, 0);
-	else selectedAttachment = NULL;
+
+	if ( focus == NULL ) {
+        selectedAttachment = NULL;
+        selectedParameter = -1; selSequence = -1;
+        return;
+	}
+
+	if ( focus->AttachmentCount( false ) > 0) {
+		selectedAttachment = focus->GetAttachmentHandle( false, 0 );
+	}
+	else {
+        selectedAttachment = NULL;
+	}
+
 	child = NULL;
 	childH = NULL;
 	pchild = NULL;
 	bool b = selectCurrentParameter();
+/*
 	if (b) {
 		int np = pchild->GetParameterCount(), ns = pchild->GetSequenceCount();
 		if (!pchild->userParametersEnabled || showCommands ) {
@@ -97,12 +115,7 @@ PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
 			}
 		}
 	}
-	strvel[0]=0;
-	objnameIndex = 0;
-	*objectName=0;//sprintf(objectName,"object");
-	className[0]=0;
-	debugString[0]=0;
-
+*/
 }
 
 // Destructor
@@ -333,7 +346,6 @@ void PylonMFD::Update (HDC hDC)
 // es asi actualizar todas las variables llamando a selectCurrentParameter
 // (ademas se puede poner a 0 antes)
 
-
 	int line = 20, tab = 2;
 	char s[NAME_SIZE], s2[NAME_SIZE];
 	#define RESET_LINE line = 32;
@@ -538,6 +550,11 @@ int PylonMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 // Internal functionality
 
 int PylonMFD::selectCurrentAttachment(void) {
+
+    if ( focus == NULL ) {
+        return -1;
+    }
+
 	int n = focus->AttachmentCount(false), i=n-1;
 	if (n==0) {
 		selectedAttachment = NULL;
@@ -603,6 +620,9 @@ void PylonMFD::selectNextAttachment(void)  {
 }
 void PylonMFD::selectPrevParam(void) {
 	selectCurrentAttachment();
+	if ( focus == NULL ) {
+        return;
+	}
 	if (selectedAttachment==NULL) {
 		childH = focusH;
 		child = focus;
@@ -646,6 +666,9 @@ void PylonMFD::selectPrevParam(void) {
 }
 void PylonMFD::selectNextParam(void) {
 	selectCurrentAttachment();
+	if ( focus == NULL ) {
+        return;
+	}
 	if (selectedAttachment==NULL) {
 		childH = focusH;
 		child = focus;
@@ -691,6 +714,9 @@ void PylonMFD::selectNextParam(void) {
 
 bool PylonMFD::selectCurrentParameter(void) {
 	selectCurrentAttachment();
+	if ( focus == NULL ) {
+        return false;
+	}
 	if (selectedAttachment==NULL) {
 		childH = focusH;
 		child = focus;
@@ -700,8 +726,10 @@ bool PylonMFD::selectCurrentParameter(void) {
 		if (childH == NULL) return false;
 		child = oapiGetVesselInterface(childH);
 	}
+
 	pchild = CPylon::IsPylonVessel(child);
 	if (pchild == NULL) return false;
+
 	int np = pchild->GetParameterCount();
 	int ns = pchild->GetSequenceCount();
 	if (np==0 && ns==0) return false;
@@ -715,6 +743,7 @@ bool PylonMFD::selectCurrentParameter(void) {
 		selSequence = selectedParameter - np;
 		selParamtype = pchild->GetSequenceType(selSequence);
 	}
+
 	return true;
 }
 

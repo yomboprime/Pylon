@@ -7,7 +7,7 @@
 //
 //	Author: Juan Jose Luna
 //
-//	Distributed under GPL. See License.txt
+//	Distributed MIT licensed. See License.txt
 //
 // ==============================================================
 
@@ -81,7 +81,8 @@ public:
     // ==============================================================
 	// VESSEL2 callbacks
 	// ==============================================================
-    virtual void clbkPreStep (double simt, double simdt, double mjd);
+	virtual void clbkPostCreation( void );
+    virtual void clbkPreStep(double simt, double simdt, double mjd);
 
 	// ==============================================================
 	// Pylon API

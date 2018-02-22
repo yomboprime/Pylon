@@ -6,7 +6,7 @@
 //
 //	Author: Juan Jose Luna
 //
-//	Distributed under GPL. See License.txt
+//	Distributed MIT licensed. See License.txt
 //
 // ==============================================================
 
@@ -53,7 +53,7 @@ public:
 	virtual void clbkPostCreation(void);
     virtual void clbkLoadStateEx (FILEHANDLE scn, void *status);
     virtual void clbkSaveState (FILEHANDLE scn);
-    virtual void clbkPreStep (double simt, double simdt, double mjd);
+    virtual void clbkPreStep(double simt, double simdt, double mjd);
     virtual int clbkConsumeBufferedKey (DWORD key, bool down, char *kstate);
 
 
@@ -123,20 +123,13 @@ public:
 
 	// Generic management
 
-	VESSEL *GetRoot(void) const;
-	VESSEL *GetParent(void) const;
-	ATTACHMENTHANDLE GetAttToParent(void) const;
+    static ATTACHMENTHANDLE GetParentAttachment( VESSEL *v );
+    static VESSEL *GetRoot( VESSEL *v );
 
 	static bool PylonAttach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
 	static bool PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
 	static CPylon * IsPylonVessel(VESSEL *v);
 
-	virtual void Changed(void);
-
-	 // Don't override this:
-	virtual void PropagateChange(bool attaching, VESSEL *parent);
-
-	bool IsConnected(VESSEL *v, VESSEL *root, VESSEL *parent);
 	bool IsFirstFrame();
 	bool IsFirstFrameAttached();
 
@@ -145,20 +138,17 @@ public:
 	int GetMFDSelectedParameter();
 	void SetMFDSelectedParameter(int selectedParameter);
 
+	ATTACHMENTHANDLE attToParent;
+
 private:
 	bool firstFrame, firstFrameAttached;
 	int framesInit;
-	VESSEL *root, *parent;
-	ATTACHMENTHANDLE attachmentToParent;
+
+
 	PylonSequence *sequences;
 	int numSeq, icurSeq; PylonSequence *curSeq;
+
 	bool inited;
-
-	void initializePylon(void);
-	void RecursivePropagateChange(VESSEL *root, VESSEL *parent);
-	void ActualizeParent(void);
-	void SelectSequence(int i);
-
 	int mfdSelectedParameter;
 
 	// Orbiter Sound Id
@@ -174,6 +164,9 @@ private:
 
 	// Meshes
 	PylonMesh *meshes;
+
+	void initializePylon(void);
+	void SelectSequence(int i);
 
 	friend class PylonSequence;
 	friend class PylonMesh;

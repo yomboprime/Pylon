@@ -7,7 +7,7 @@
 //
 //	Author: Juan Jose Luna
 //
-//	Distributed under GPL. See License.txt
+//	Distributed MIT licensed. See License.txt
 //
 // ==============================================================
 
@@ -48,24 +48,19 @@ CPylonRT::~CPylonRT ()
 }
 
 // Frame update
-void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
+void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 {
 
-	if (GetParent()==NULL) {
-		CPylon::clbkPreStep (simt, simdt, mjd);
+	this->attToParent = CPylon::GetParentAttachment( this );
+    if ( this->attToParent == NULL) {
+		CPylon::clbkPreStep( simt, simdt, mjd );
 		return;
 	}
 
-	ATTACHMENTHANDLE att = GetAttToParent();
-	GetAttachmentParams(att,pos,dir,rot);
-
-	double dt = oapiGetSimStep();
+	GetAttachmentParams( attToParent, pos, dir, rot );
 
 	if (rotAxis != PYL_RT_NO_ROTATION) {
-		// todo  Esto esta bien pero en el primer frame no se actualizan los attachments,
-		// por eso esta a true.. mirar si se puede hacer al setattparams en CPylon en 1er frame.
-		// si, inicializar los vectores
-		if (true) {//angRot!=angRotSet || IsFirstFrameAttached() || doInit) {
+		if ( angRot != angRotSet ) {
 			doInit = false;
 			if (angVelMax==0) {
 				angRot = angRotSet;
@@ -103,7 +98,7 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 				if (forward!=0) {
 					double antSignAngVel = signAngVel;
 					if ( angVel == 0 ) antSignAngVel = 0;
-					angVel += forward * angAccel * dt;
+					angVel += forward * angAccel * simdt;
 					signAngVel = angVel<0?-1:1;
 					absAngVel = angVel<0?-angVel:angVel;
 					if ( antSignAngVel != 0 && antSignAngVel != signAngVel ) {
@@ -114,7 +109,7 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 					}
 				}
 
-				angRot += angVel * dt;
+				angRot += angVel * simdt;
 
 				double newsignTgtAng;
 				dist = angRotSet - angRot;
@@ -156,133 +151,74 @@ void CPylonRT::clbkPreStep (double simt, double simdt, double mjd)
 
 
 	if (hasTraslation) {
-		if (true) {//...
-			doInit = false;
-			if (linVelMax==0) {
-				traslation = traslSet;
-			} else {
+        doInit = false;
+        if (linVelMax==0) {
+            traslation = traslSet;
+        } else {
 
-				double signLinVel = linVel<0?-1:1;
-				double absLinVel = linVel<0?-linVel:linVel;
-				double dist = traslSet - traslation;
-				double signTgtTrasl;
-				if (dist != 0) signTgtTrasl = (dist < 0)?-1:1;
-				else signTgtTrasl = 0;
-				if (dist < 0) dist = -dist;
+            double signLinVel = linVel<0?-1:1;
+            double absLinVel = linVel<0?-linVel:linVel;
+            double dist = traslSet - traslation;
+            double signTgtTrasl;
+            if (dist != 0) signTgtTrasl = (dist < 0)?-1:1;
+            else signTgtTrasl = 0;
+            if (dist < 0) dist = -dist;
 
-				// Select direction
-				double forward = 0;
-				if (clampEnabled) {
-					if (signTgtTrasl!=0) {
-						forward = signTgtTrasl;
-						if (linAccel > 0) {
-							if (signTgtTrasl*signLinVel==1) {
-								double distBrake = 0.5*linVel*linVel/linAccel;
-								if (distBrake > dist) {
-									if (clampEnabled) linVel = sqrt(2*linAccel*dist) * signLinVel;
-									forward = -signTgtTrasl;
-								}
-							}
-						}
-					}
-				} else {
-					if (traslSet!=0) forward = (traslSet>0)?1:-1;
-				}
+            // Select direction
+            double forward = 0;
+            if (clampEnabled) {
+                if (signTgtTrasl!=0) {
+                    forward = signTgtTrasl;
+                    if (linAccel > 0) {
+                        if (signTgtTrasl*signLinVel==1) {
+                            double distBrake = 0.5*linVel*linVel/linAccel;
+                            if (distBrake > dist) {
+                                if (clampEnabled) linVel = sqrt(2*linAccel*dist) * signLinVel;
+                                forward = -signTgtTrasl;
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (traslSet!=0) forward = (traslSet>0)?1:-1;
+            }
 
-				// Cinematics
-				if (forward!=0) {
-					linVel += forward * linAccel * dt;
-					signLinVel = linVel<0?-1:1;
-					absLinVel = linVel<0?-linVel:linVel;
-					if (absLinVel > linVelMax) linVel = signLinVel * linVelMax;
+            // Cinematics
+            if (forward!=0) {
+                linVel += forward * linAccel * simdt;
+                signLinVel = linVel<0?-1:1;
+                absLinVel = linVel<0?-linVel:linVel;
+                if (absLinVel > linVelMax) linVel = signLinVel * linVelMax;
+            }
 
-					// todo esto funciona, pero no se si toca hacerlo en absoluto
-					// es el impulsar los hijos cuando aun esta atached
-/*
-					DWORD n = AttachmentCount(false);
-					for (DWORD i=0;i<n;i++) {
-						ATTACHMENTHANDLE at = GetAttachmentHandle(false, i);
-						OBJHANDLE o = GetAttachmentStatus(at);
-						if (o!=NULL) {
-							VESSEL *c = oapiGetVesselInterface(o);
-							c->AddForce(_V(0,0,c->GetEmptyMass()*0.5), _V(0,0,0));
-						}
-					}
-*/
+            traslation += linVel * simdt;
 
-				}
+            double newsignTgtTrasl;
+            dist = traslSet - traslation;
+            if (dist != 0) newsignTgtTrasl = (dist < 0)?-1:1;
+            else newsignTgtTrasl = 0;
+            if (dist < 0) dist = -dist;
 
-				traslation += linVel * dt;
+            if (clampEnabled) {
+                if (traslation < 0) { traslation = 0; }
+                if (traslation > traslationMod) { traslation = traslationMod; }
+                if (newsignTgtTrasl != signTgtTrasl) {
+                    traslation = traslSet;
+                    linVel = 0;
+                }
+            } else {
+            }
+        }
 
-				double newsignTgtTrasl;
-				dist = traslSet - traslation;
-				if (dist != 0) newsignTgtTrasl = (dist < 0)?-1:1;
-				else newsignTgtTrasl = 0;
-				if (dist < 0) dist = -dist;
+        // Traslation
+        pos = traslation0 + unitTrasl*traslation;
+        pos.x = - pos.x;
+        pos.y = - pos.y;
+        pos.z = - pos.z;
 
-				if (clampEnabled) {
-					if (traslation < 0) { traslation = 0; }
-					if (traslation > traslationMod) { traslation = traslationMod; }
-					if (newsignTgtTrasl != signTgtTrasl) {
-						traslation = traslSet;
-						linVel = 0;
-					}
-				} else {
-				}
-			}
-
-			// Traslation
-			pos = traslation0 + unitTrasl*traslation;
-			pos.x = - pos.x;
-			pos.y = - pos.y;
-			pos.z = - pos.z;
-		}
-/*
-		if (traslation!=traslSet) {
-			if (linAccel==0) {
-				traslation = traslSet;
-			} else {
-
-				double signVel = linVel<0?-1:1;
-				double absVel = linVel<0?-linVel:linVel;
-				double signTgtPos = (traslSet - traslation < 0)?-1:1;
-				double dist = traslSet - traslation; if (dist < 0) dist = -dist;
-
-				double forward = signTgtPos;
-
-				if (linAccel > 0) {
-					if (signTgtPos*signVel==1) {
-						double distBrake = 0.5*linVel*linVel/linAccel;
-						if (distBrake > dist) {
-							if (clampEnabled) linVel = sqrt(2*linAccel*dist) * signVel;
-							forward = -signTgtPos;
-						}
-//sprintf(oapiDebugString(),"Vel=%f, DistBrake = %f, %s",linVel,distBrake, forward==1?"ACCEL\0":"BRAKE\0");
-					}
-				}
-
-				linVel += forward * linAccel * dt;
-				if (absVel > linVelMax) linVel = signVel * linVelMax;
-				traslation += linVel * dt;
-
-				double newsignTgtPos = (traslSet - traslation < 0)?-1:1;
-
-				if (newsignTgtPos != signTgtPos) {
-					traslation = traslSet;
-					if (clampEnabled)
-						linVel = 0;
-				} else if (clampEnabled) {
-					if (traslation < 0) { traslation = 0; }
-					if (traslation > traslationMod) void CPylonRT::clbkPreStep (double simt, double simdt, double mjd){ traslation = traslationMod; }
-				}
-			}
-
-			pos = traslation0 - unitTrasl*traslation;
-		}
-*/
 	}
 
-	CPylon::clbkPreStep (simt, simdt, mjd);
+	CPylon::clbkPreStep(simt, simdt, mjd);
 }
 
 // ==============================================================
@@ -294,7 +230,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
     // D. Beachy: GROW THE STACK HERE SO WE CAN USE BOUNDSCHECKER FOR DEBUGGING
     // I believe the reason we need this is because BoundsChecker (for this object) grows the stack more than 1 full page
-    // at once, skipping over the guard page that Winvoid CPylonRT::clbkPreStep (double simt, double simdt, double mjd)dows places below the stack to grow it automatically.
+    // at once, skipping over the guard page that Winvoid CPylonRT::clbkPreStep(double simt, double simdt, double mjd)dows places below the stack to grow it automatically.
     // Therefore we will grow the stack here.
     // TODO: COMMENT THIS OUT once BoundsChecker debugging is complete
     int pageCount = 250;  // 250 4K pages = reserve 1 MB of stack
@@ -323,13 +259,13 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 /*DLLCLBK void ovcPostCreation (VESSEL *vessel) {
 }*/
 
-/*void CPylonRT::clbkPostCreation (void)
-{
-	//orbiterSoundId = ConnectToOrbiterSoundDLL3(GetHandle());
+void CPylonRT::clbkPostCreation( void ) {
 
-sprintf(oapiDebugString(),"CLBKPOSTCREATION %s", this->GetName());
+    CPylon::clbkPostCreation();
 
-}*/
+    actualizeTraslVectors();
+
+}
 
 // Cleanup
 DLLCLBK void ovcExit (VESSEL *vessel)

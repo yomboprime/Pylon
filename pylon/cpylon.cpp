@@ -6,7 +6,7 @@
 //
 //	Author: Juan Jose Luna
 //
-//	Distributed under GPL. See License.txt
+//	Distributed MIT licensed. See License.txt
 //
 // ==============================================================
 
@@ -31,10 +31,7 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 	userDestroyEnabled = true;
 	actualizeNotPylonChilds = false;//true;
 	releaseVel = 0.0;
-//todo: si owner=NULL al necesitarlo, devolver false. para ejecutar seqs desde otro sitio
-	parent = NULL;
-	root = NULL;
-	attachmentToParent = NULL;
+
 	sequences = NULL;
 	numSeq = 0;
 	icurSeq = -2;
@@ -42,6 +39,7 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 
 	firstFrame = true;
 	firstFrameAttached = true;
+	attToParent = NULL;
 	inited = false;
 
 	mfdSelectedParameter = 0;
@@ -244,73 +242,13 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 
 // Frame update
 // This function should be called from the child vessel class callback function as the
-// LAST instruction. It updates the parent attachment from the local variables attachmenToParent,
+// LAST instruction. It updates the parent attachment from the local variables
 // pos, dir and rot (if it is attached to something) and executes the active sequences.
-void CPylon::clbkPreStep (double simt, double simdt, double mjd)
+void CPylon::clbkPreStep(double simt, double simdt, double mjd)
 {
 
-    // TODO2018 remove!
-	ActualizeParent();
-
-	if (attachmentToParent != NULL) {
-		SetAttachmentParams(attachmentToParent,pos,dir,rot);
-	}
-
-/*
-old code
-	bool f = firstFrame;
-	if (firstFrame) {
-		firstFrame = false;
-	}
-	else
-		if (attachmentToParent != NULL) {
-		SetAttachmentParams(attachmentToParent,pos,dir,rot);
-	}
-*/
-/*	else
-	{
-		_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"TIMESTEP 1: %s",GetName());
-	}
-bug: no deberian pasar por aqui, y parece que los childs en attachment 2,3,4 etc no se actualizan
-_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"CHUNGONOKO: %s",GetName());
-*/
-
-
-	if ( firstFrame && actualizeNotPylonChilds) {
-_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"CHUNGONOKO: %s",GetName());
-
-        ATTACHMENTHANDLE top;
-        OBJHANDLE op;
-
-		int n = AttachmentCount(false);
-		VESSEL *v;
-		for (int i=0;i<n;i++) {
-			ATTACHMENTHANDLE a = GetAttachmentHandle(false, i);
-			OBJHANDLE o = GetAttachmentStatus(a);
-			if (o!=NULL) {
-				v = oapiGetVesselInterface(o);
-				if (v==NULL) continue;
-				if (IsPylonVessel(v)!=NULL) continue;
-
-                VESSEL *r=this;
-                double cm = v->GetEmptyMass();
-                op = NULL;
-                while (op==NULL) {
-                    double rm = r->GetEmptyMass();
-                    r->SetEmptyMass(rm + cm);
-                    int j=0, m= r->AttachmentCount(true);
-                    while (j<m && op==NULL) {
-                        top = r->GetAttachmentHandle(true, j);
-                        op = r->GetAttachmentStatus(top);
-                        j=j+1;
-                    }
-                    if (op==NULL) break;
-                    r = oapiGetVesselInterface(op);
-                    if (r==NULL) break;
-                    op=NULL;
-                }
-			}
-		}
+	if ( this->attToParent != NULL ) {
+		SetAttachmentParams( this->attToParent, pos, dir, rot );
 	}
 
 	if (sequences) sequences->Execute();
@@ -720,106 +658,119 @@ bool CPylon::ActivateSequenceByKey(DWORD key) {
 // Generic management functions
 // ==============================================================
 
-// Returns the parent of the vessel if it is connected to a parent, or NULL otherwise.
-VESSEL *CPylon::GetParent(void) const {
-	return parent;
-}
+// Returns the P ATTACHEMTNHANDLE which is connected to a parent, or NULL otherwise.
+ATTACHMENTHANDLE CPylon::GetParentAttachment( VESSEL *v ) {
 
-// Returns the root of the vessel if it is connected to a parent, or 'this' otherwise.
-VESSEL *CPylon::GetRoot(void) const {
-	return root;
-}
-
-ATTACHMENTHANDLE CPylon::GetAttToParent(void) const {
-	return attachmentToParent;
-}
-
-
-bool CPylon::PylonAttach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment) {
-	VESSEL *p = oapiGetVesselInterface(parent),
-		*c = oapiGetVesselInterface(child);
-
-	if (p==NULL || c==NULL) return false;
-	CPylon *pp = IsPylonVessel(p), *pc = IsPylonVessel(c);
-
-	ATTACHMENTHANDLE top;
-	OBJHANDLE o = NULL;
-	int i=0, n= c->AttachmentCount(true);
-	while (i<n && o==NULL) {
-		top = c->GetAttachmentHandle(true, i);
-		o = c->GetAttachmentStatus(top);
-		i=i+1;
-	}
-	if (o!=NULL)
-	{
-		PylonDetach(o, c->GetHandle(), parent_attachment, 0.0);
-	}
-
-	if (!p->AttachChild(child, parent_attachment, child_attachment)) return false;
-
-	if (pc!=NULL)
-		pc->PropagateChange(false, p);
-	else if (pp!=NULL)
-		pp->PropagateChange(false, pp->GetParent());
-
-	o = NULL;
-	VESSEL* r=p;
-	double cm = c->GetEmptyMass();
-	while (o==NULL) {
-		double rm = r->GetEmptyMass();
-		r->SetEmptyMass(rm + cm);
-		int i=0, n= r->AttachmentCount(true);
-		while (i<n && o==NULL) {
-			top = r->GetAttachmentHandle(true, i);
-			o = r->GetAttachmentStatus(top);
-			i=i+1;
+    ATTACHMENTHANDLE pAtt = NULL;
+	int n = v->AttachmentCount( true );
+	for ( int i = 0, n = v->AttachmentCount( true ); i < n; i++ ) {
+		pAtt = v->GetAttachmentHandle( true, i );
+		if ( v->GetAttachmentStatus( pAtt ) != NULL ) {
+            return pAtt;
 		}
-		if (o==NULL) break;
-		r = oapiGetVesselInterface(o);
-		if (r==NULL) break;
-		o=NULL;
+	}
+
+	return NULL;
+}
+
+// Get root of vessel v in attachment tree
+VESSEL *CPylon::GetRoot( VESSEL *v ) {
+
+    OBJHANDLE o = NULL;
+    while ( o == NULL ) {
+        int i = 0;
+        int n = v->AttachmentCount( true );
+        while ( i < n && o == NULL ) {
+            ATTACHMENTHANDLE top = v->GetAttachmentHandle( true, i );
+            o = v->GetAttachmentStatus( top );
+            i = i + 1;
+        }
+        if ( o == NULL ) break;
+        v = oapiGetVesselInterface( o );
+        if ( v == NULL) break;
+        o = NULL;
+    }
+
+    return v;
+
+}
+
+bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment ) {
+
+	VESSEL *p = oapiGetVesselInterface( parent );
+    VESSEL *c = oapiGetVesselInterface( child );
+
+	if ( p == NULL || c == NULL ) {
+        return false;
+	}
+
+	ATTACHMENTHANDLE attParent = CPylon::GetParentAttachment( c );
+	if ( attParent != NULL ) {
+        OBJHANDLE o = c->GetAttachmentStatus( attParent );
+        if ( o != NULL ) {
+            PylonDetach(o, c->GetHandle(), attParent, 0.0);
+        }
+	}
+
+	if ( ! p->AttachChild( child, parent_attachment, child_attachment ) ) {
+        return false;
+	}
+
+	OBJHANDLE o = NULL;
+	VESSEL* r = p;
+	double cm = c->GetEmptyMass();
+	while ( o == NULL ) {
+		double rm = r->GetEmptyMass();
+		r->SetEmptyMass( rm + cm );
+		int i = 0, n = r->AttachmentCount( true );
+		while ( i < n && o == NULL ) {
+			ATTACHMENTHANDLE top = r->GetAttachmentHandle( true, i );
+			OBJHANDLE o = r->GetAttachmentStatus( top );
+			i = i + 1;
+		}
+		if ( o == NULL) break;
+		r = oapiGetVesselInterface( o );
+		if ( r == NULL ) break;
+		o = NULL;
 	}
 	return true;
 }
 
-bool CPylon::PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel) {
+bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
 
-	if (parent==NULL || child==NULL) return false;
-	VESSEL *p = oapiGetVesselInterface(parent),
-		*c = oapiGetVesselInterface(child);
-	if (p==NULL || c==NULL) return false;
-	CPylon *pp = IsPylonVessel(p), *pc = IsPylonVessel(c);
-	/*if (pc!=NULL) {
-		if (pp==NULL) {
-			pc->PropagateChange(true, NULL);
-		}
-	}*/
-	if (pp!=NULL)
-		pp->PropagateChange(false, pp->GetParent());
-	if (pc!=NULL) {
-		pc->PropagateChange(true, NULL);
+	if ( parent == NULL || child == NULL ) {
+        return false;
 	}
+
+	VESSEL *p = oapiGetVesselInterface(parent);
+    VESSEL *c = oapiGetVesselInterface(child);
+
+	if ( p == NULL || c == NULL) {
+	    return false;
+    }
+
+	CPylon *pp = IsPylonVessel(p), *pc = IsPylonVessel(c);
 
 	ATTACHMENTHANDLE top;
 	OBJHANDLE o = NULL;
-	VESSEL *r=p;
+	VESSEL *r = p;
 	double cm = c->GetEmptyMass() + c->GetFuelMass();
-	while (o==NULL) {
+	while ( o == NULL ) {
 		double rm = r->GetEmptyMass();
 		if (rm > cm) r->SetEmptyMass(rm - cm);
-		int i=0, n= r->AttachmentCount(true);
-		while (i<n && o==NULL) {
-			top = r->GetAttachmentHandle(true, i);
-			o = r->GetAttachmentStatus(top);
+		int i=0, n= r->AttachmentCount( true );
+		while ( i < n && o == NULL) {
+			top = r->GetAttachmentHandle( true, i) ;
+			o = r->GetAttachmentStatus( top );
 			i=i+1;
 		}
-		if (o==NULL) break;
-		r = oapiGetVesselInterface(o);
-		if (r==NULL) break;
-		o=NULL;
+		if ( o == NULL )  break;
+		r = oapiGetVesselInterface( o );
+		if ( r == NULL ) break;
+		o = NULL;
 	}
 
-	bool done = p->DetachChild(parent_attachment, vel);
+	bool done = p->DetachChild( parent_attachment, vel );
 
 	double invdt = oapiGetSimStep(),
 		cmass = c->GetMass() + c->GetFuelMass();
@@ -880,22 +831,7 @@ bool CPylon::PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE par
 
 		if (vel!=0) {
 			if (pp!=NULL) {
-				r = pp->GetRoot();
-			} else {
-				o = NULL;
-				r = p;
-				while (o==NULL) {
-					int i=0, n= r->AttachmentCount(true);
-					while (i<n && o==NULL) {
-						top = r->GetAttachmentHandle(true, i);
-						o = r->GetAttachmentStatus(top);
-						i=i+1;
-					}
-					if (o==NULL) break;
-					r = oapiGetVesselInterface(o);
-					if (r==NULL) break;
-					o=NULL;
-				}
+				r = GetRoot( pp );
 			}
 			if (r != NULL) {
 				VECTOR3 dir;
@@ -929,104 +865,6 @@ CPylon * CPylon::IsPylonVessel(VESSEL *v) {
 	return (CPylon *) v;
 }
 
-
-
-// This function is called when a call to PropagateChange() is done to notify that a change
-// has ocurred in the pylon tree structure. In this function the childs should actualize
-// its references to other components in the structure, or other work could be performed here.
-//
-// Attachment management should be done here to improve efficiency. In the Timestep,
-// related vessels (CPylons or other) in the structure should be accesed from direct
-// references that are actualized here, rather than searching them in every frame.
-//
-// Each class that overrides this function should make a call in the first line to her mother
-// class Changed() function.
-//
-// The CPylon::Changed() function actualizes the sequences that have object references.
-//
-// When actualizing references to brother, cousin, uncles objects etc, and going  up in the
-// structure, the parent field of the CPylons should be used here instead of the api calls,
-// wich could not show the final tree state. This also aplies to root and attachmentToParent.
-//
-// When 'navigating' down, use the api calls, but make sure that any child CPylon has his
-// parent field equal to its actual parent. If not, that child is being detached.
-//
-// The references should be unlinked if that object/s are being detached. The references
-// should not go through non-CPylon vessels in the down direction, but can in the up one, only
-// one time: that is, the CPylons can communicate through the ship that owns those CPylon.
-//
-// The function IsConnected() can be used here to determine if a vessel is connected to this
-// under those conditions.
-//
-void CPylon::Changed(void)
-{
-//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "Changed[%s]: parent = %s, root = %s, atttop = %d",GetName(),parent->GetName(),root->GetName(), attachmentToParent);
-//	ActualizeSequences();
-}
-
-// The PropagateChange() function should be called before or after a change occurs in a CPylon
-// tree structure (that is, any object, CPylon or not, is detached or attached to or from
-// the structure containing CPylon objects).
-//
-// The Changed() functions of all the Pylon vessels so affected are called in a descent order
-// down the tree, so they can actualize references to other pylons in the structure.
-//
-// When Detaching object A from B, a call should be made prior to B->DetachChild(). If A is
-// a CPylon, call A->PropagateChange(true, B, NULL).
-//
-// You must ensure first that A is a CPylon using the IsPylonVessel() static function. If it is not,
-// then check B and call B->PropagateChanges(false, B->GetParent(), B->GetAttToParent())
-// If neither is a CPylon, just call DetachChild().
-//
-// When attaching A to B, the call A->PropagateChanges(false, B, attP) must be made AFTER the
-// call to B->AttachChild() (attP is the 'to parent' attachment in A) If A is not CPylon, make
-// instead the call to B:
-// B->PropagateChanges(false, B->GetParent(), B->GetAttToParent()) and if neither is, no call is needed.
-//
-// For convenience, the functions PylonAttachChild() and PylonDetachChild() could be used
-// when attaching or detaching. They do all the checking and the call to this function.
-//
-// This method should not be overriden
-void CPylon::PropagateChange(bool detaching, VESSEL *parent)
-{
-	if (detaching) {
-		if (this->parent==NULL) return;
-		RecursivePropagateChange(NULL, NULL);
-	}
-	if (parent==NULL) return;
-	VESSEL *r=parent;
-	CPylon *pr=IsPylonVessel(r);
-	while (pr!=NULL) {
-		if (pr->parent==NULL) break;
-		r = pr->parent;
-		pr = IsPylonVessel(r);
-	}
-
-	if (pr!=NULL) {
-		pr->RecursivePropagateChange(pr, NULL);
-	} else {
-
-		for (int i=0,n=r->AttachmentCount(false); i<n; i++) {
-			ATTACHMENTHANDLE a = r->GetAttachmentHandle(false, i);
-			OBJHANDLE o = GetAttachmentStatus(a);
-			if (o==NULL) continue;
-			CPylon *p = IsPylonVessel(oapiGetVesselInterface(o));
-			if (p!=NULL) {
-				p->RecursivePropagateChange(r, r);
-				break;
-			}
-		}
-	}
-}
-
-// This function tells if two vessels are connected. It's a costly function, use it only in
-// the body of the virtual function Changed()
-//
-bool CPylon::IsConnected(VESSEL *v, VESSEL *root, VESSEL *parent) {
-
-	return true;
-}
-
 // ==============================================================
 // End of Pylon API
 // ==============================================================
@@ -1035,69 +873,6 @@ bool CPylon::IsConnected(VESSEL *v, VESSEL *root, VESSEL *parent) {
 // ==============================================================
 // Internal functions
 // ==============================================================
-
-void CPylon::RecursivePropagateChange(VESSEL *root, VESSEL *parent) {
-
-	if (this->root == NULL && root != NULL) firstFrameAttached = true;
-
-	this->root = root;
-	this->parent = parent;
-
-	if (parent) {
-		ATTACHMENTHANDLE att;
-		int i, n = AttachmentCount(true);
-		for	(i=0;i<n;i++) {
-			att = GetAttachmentHandle(true, i);
-			if (GetAttachmentStatus(att)!=NULL) {attachmentToParent = att; i = n;}
-		}
-	}
-
-	Changed();
-
-	for (int i=0,n=AttachmentCount(false); i<n; i++) {
-		ATTACHMENTHANDLE a = GetAttachmentHandle(false, i);
-		OBJHANDLE o = GetAttachmentStatus(a);
-		if (o==NULL) continue;
-		CPylon *p = IsPylonVessel(oapiGetVesselInterface(o));
-		if (p!=NULL) {
-			p->RecursivePropagateChange(root, this);
-		} else {
-		}
-	}
-}
-
-//Called only in simulation init
-void CPylon::ActualizeParent(void) {
-
-	ATTACHMENTHANDLE top;
-	OBJHANDLE o = NULL;
-
-
-	int i=0, n= AttachmentCount(true);
-	while (i<n && o==NULL) {
-		top = GetAttachmentHandle(true, i);
-		o = GetAttachmentStatus(top);
-		if ( !o )
-		{
-			i=i+1;
-		}
-	}
-
-	if (i>=n) return;
-
-	VESSEL *v = oapiGetVesselInterface(o);
-	CPylon *p = CPylon::IsPylonVessel(v);
-
-//	_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "actualize parent: %s, parent=%s, i=%d, n=%d,o=%d,v=%s %f",GetName(), this->parent?this->parent->GetName():"NOPARENT", i,n,o, v?v->GetName():"NOVESSELPARENT", oapiGetSimTime());
-
-//	this->parent = v;
-
-	if (p==NULL) {
-		PropagateChange(false, v);
-	}
-
-//	_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "actualize parent2: %s, parent=%s, i=%d, n=%d,o=%d, %f",GetName(), this->parent?this->parent->GetName():"NOPARENT", i,n,o, oapiGetSimTime());
-}
 
 bool CPylon::IsFirstFrame() {
 	return firstFrame;
@@ -1118,30 +893,30 @@ void CPylon::SetMFDSelectedParameter(int selectedParameter)
 
 void CPylon::initializePylon() {
 
-    ActualizeParent();
-
-    if (parent) {
-        ATTACHMENTHANDLE top;
-        OBJHANDLE op;
-        VESSEL *r=parent;
-
-        double cm = GetEmptyMass();
-        op = NULL;
-        while (op==NULL) {
-            double rm = r->GetEmptyMass();
-            r->SetEmptyMass(rm + cm);
-            int	j=0, m= r->AttachmentCount(true);
-            while (j<m && op==NULL) {
-                top = r->GetAttachmentHandle(true, j);
-                op = r->GetAttachmentStatus(top);
-                j=j+1;
+    ATTACHMENTHANDLE attParent = CPylon::GetParentAttachment( this );
+	if ( attParent != NULL ) {
+        OBJHANDLE op = this->GetAttachmentStatus( attParent );
+        if ( op != NULL ) {
+            VESSEL *r = oapiGetVesselInterface( op );
+            double cm = GetEmptyMass();
+            op = NULL;
+            while (op==NULL) {
+                double rm = r->GetEmptyMass();
+                r->SetEmptyMass(rm + cm);
+                int	j=0, m= r->AttachmentCount(true);
+                while (j<m && op==NULL) {
+                    ATTACHMENTHANDLE top = r->GetAttachmentHandle(true, j);
+                    op = r->GetAttachmentStatus(top);
+                    j=j+1;
+                }
+                if (op==NULL) break;
+                r = oapiGetVesselInterface(op);
+                if (r==NULL) break;
+                op=NULL;
             }
-            if (op==NULL) break;
-            r = oapiGetVesselInterface(op);
-            if (r==NULL) break;
-            op=NULL;
+
         }
-    }
+	}
 
     int n = GetSequenceCount();
     TPylParamValue v; v.type = PYL_PARAM_NOT_DEFINED;
