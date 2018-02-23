@@ -61,7 +61,7 @@ PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
 
     selectedAttachmentIndex = selectedParameter = selParamtype = selSequence = 0;
 
-	showCommands = 1;
+	showCommands = 0;
 
 	strvel[0]=0;
 	objnameIndex = 0;
