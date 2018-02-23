@@ -24,6 +24,7 @@
 CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 : VESSEL2 (hObj, fmodel)
 {
+
 	canNavigate = true;
 	userParametersEnabled = true;
 	userReleaseEnabled = true;

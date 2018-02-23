@@ -59,8 +59,8 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 
 	GetAttachmentParams( attToParent, pos, dir, rot );
 
-	if (rotAxis != PYL_RT_NO_ROTATION) {
-		if ( angRot != angRotSet ) {
+	if ( rotAxis != PYL_RT_NO_ROTATION ) {
+		if ( this->IsFirstFrame() || angRot != angRotSet ) {
 			doInit = false;
 			if (angVelMax==0) {
 				angRot = angRotSet;

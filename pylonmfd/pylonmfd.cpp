@@ -61,7 +61,7 @@ PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
 
     selectedAttachmentIndex = selectedParameter = selParamtype = selSequence = 0;
 
-	showCommands = 0;
+	showCommands = 1;
 
 	strvel[0]=0;
 	objnameIndex = 0;
@@ -340,6 +340,12 @@ void print(HDC hDC, int i, int *j, LPCTSTR cad) {
 
 void PylonMFD::Update (HDC hDC)
 {
+/*
+    int kk = 34;
+    if ( kk > 0 ) {
+        return;
+    }
+*/
 	Title (hDC, strings[0]);
 // todo: aqui se asume que se tiene focus y focusH validos.
 // usar oapiGetFocusObject para ver si ha cambiado el focus, y si
