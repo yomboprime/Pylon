@@ -131,7 +131,6 @@ public:
 	static CPylon * IsPylonVessel(VESSEL *v);
 
 	bool IsFirstFrame();
-	bool IsFirstFrameAttached();
 
 	// --------- End of API ---------
 
@@ -141,9 +140,7 @@ public:
 	ATTACHMENTHANDLE attToParent;
 
 private:
-	bool firstFrame, firstFrameAttached;
-	int framesInit;
-
+	bool firstFrame;
 
 	PylonSequence *sequences;
 	int numSeq, icurSeq; PylonSequence *curSeq;

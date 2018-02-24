@@ -69,6 +69,8 @@ enum PYL_RT_AXIS {
 };
 static const char *PYL_RT_AXIS_NAMES[PYL_RT_ROTATION_LAST] = { "", "X", "Y", "Z" };
 
+static VECTOR3 PYL_RT_AXIS_VECTORS[PYL_RT_ROTATION_LAST] = { _V(1, 0, 0), _V(1, 0, 0), _V(0, 1, 0), _V(0, 0, 1) };
+
 // ==========================================================
 // Interface for derived vessel class: CPylonRT
 // ==========================================================
@@ -131,6 +133,10 @@ private:
 	double traslationMod;
 	VECTOR3 unitTrasl;
 	bool doInit;
+
+	VECTOR3 pos0,dir0,rot0;
+
+	bool firstFrameAttached;
 
 	friend class CPylon;
 };

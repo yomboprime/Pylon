@@ -39,7 +39,7 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 	curSeq = NULL;
 
 	firstFrame = true;
-	firstFrameAttached = true;
+
 	attToParent = NULL;
 	inited = false;
 
@@ -255,7 +255,6 @@ void CPylon::clbkPreStep(double simt, double simdt, double mjd)
 	if (sequences) sequences->Execute();
 
 	firstFrame = false;
-	firstFrameAttached = false;
 }
 
 int CPylon::clbkConsumeBufferedKey (DWORD key, bool down, char *kstate)
@@ -877,10 +876,6 @@ CPylon * CPylon::IsPylonVessel(VESSEL *v) {
 
 bool CPylon::IsFirstFrame() {
 	return firstFrame;
-}
-
-bool CPylon::IsFirstFrameAttached() {
-	return firstFrameAttached;
 }
 
 int CPylon::GetMFDSelectedParameter()

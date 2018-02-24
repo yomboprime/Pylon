@@ -27,7 +27,7 @@ CPylonRT::CPylonRT (OBJHANDLE hObj, int fmodel)
 	hasTraslation = false;
 
 	linAccel = 1, linVelMax = 5,
-	traslation0 = _V(-0.075,0,-2), traslation1 = _V(0.075,0,10);
+	traslation0 = _V(0,0,0), traslation1 = _V(0,0,0);
 	angAccel = 2*PI/180.0, angVelMax = 20*PI/180.0, angMin = -PI, angMax = PI;
 
 	releaseAngVel = 0;
@@ -36,7 +36,19 @@ CPylonRT::CPylonRT (OBJHANDLE hObj, int fmodel)
 
 	traslation = 0, linVel = 0, angRot = 0, angVel = 0;
 
+	pos0.x = 0;
+	pos0.y = 0;
+	pos0.z = 0;
+	dir0.x = 0;
+	dir0.y = 0;
+	dir0.z = -1;
+	rot0.x = 0;
+	rot0.y = 1;
+	rot0.z = 0;
+
 	actualizeTraslVectors();
+
+	firstFrameAttached = true;
 
 	doInit = true;
 }
@@ -52,12 +64,18 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 {
 
 	this->attToParent = CPylon::GetParentAttachment( this );
+
     if ( this->attToParent == NULL) {
+        this->firstFrameAttached = true;
 		CPylon::clbkPreStep( simt, simdt, mjd );
 		return;
 	}
 
-	GetAttachmentParams( attToParent, pos, dir, rot );
+    if ( this->firstFrameAttached ) {
+        GetAttachmentParams( attToParent, pos0, dir0, rot0 );
+        veccpy( pos, pos0 );
+        firstFrameAttached = false;
+    }
 
 	if ( rotAxis != PYL_RT_NO_ROTATION ) {
 		if ( this->IsFirstFrame() || angRot != angRotSet ) {
@@ -131,6 +149,7 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 			}
 
 			// Transformation
+			/*
 			double s = sin(angRot), c = cos(angRot);
 			switch (rotAxis) {
 				case PYL_RT_ROTATION_X:
@@ -146,6 +165,12 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 					rot	= _V(s, c, 0);
 					break;
 			}
+			*/
+
+			MATRIX3 rotationMatrix = rotm( PYL_RT_AXIS_VECTORS[ rotAxis ], angRot );
+			dir = mul( rotationMatrix, dir0 );
+			rot = mul( rotationMatrix, rot0 );
+
 		}
 	}
 
