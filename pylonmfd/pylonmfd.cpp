@@ -28,9 +28,10 @@ const char* strings[1]= {
 DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 {
 	static char *name = "Pylon";       // MFD mode name
-	MFDMODESPEC spec;
+	MFDMODESPECEX spec;
 	spec.name = name;
 	spec.key = OAPI_KEY_P;            // MFD mode selection key
+	spec.context = NULL;
 	spec.msgproc = PylonMFD::MsgProc;  // MFD mode callback function
 
 	// Register the new MFD mode with Orbiter
@@ -543,10 +544,15 @@ void PylonMFD::Update (HDC hDC)
 int PylonMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg) {
+/*
 	case OAPI_MSG_MFD_OPENED:
 		// Our new MFD mode has been selected, so we create the MFD and
 		// return a pointer to it.
 		return (int)(new PylonMFD (LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam));
+*/
+        case OAPI_MSG_MFD_OPENEDEX:
+            MFDMODEOPENSPEC *ospec = (MFDMODEOPENSPEC*)wparam;
+            return (int)( new PylonMFD( ospec->w, ospec->h, (VESSEL*)lparam ) );
 	}
 	return 0;
 }
