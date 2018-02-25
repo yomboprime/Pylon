@@ -33,6 +33,8 @@ public:
 	int visMode;
 	int meshIndex;
 
+	VECTOR3 pos;
+
 	PylonMesh *prev, *next;
 	CPylon *owner;
 };

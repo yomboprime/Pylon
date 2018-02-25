@@ -47,7 +47,7 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 
 	orbiterSoundId = -1;
 
-	this->meshes = 0;
+	this->meshes = NULL;
 }
 
 // Destructor
@@ -155,12 +155,12 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 	SaveDefaultState (scn);
 
 	// print STATE sequence
-	int i = GetSequenceByName("STATE");
-	if ( i != -1 ) {
-		DeleteSequence(i);
+	int stateSequenceIndex = GetSequenceByName("STATE");
+	if ( stateSequenceIndex != -1 ) {
+		DeleteSequence(stateSequenceIndex);
 	}
 
-	i = CreateSequence("STATE",PYL_PARAM_NOT_DEFINED,false);
+	stateSequenceIndex = CreateSequence("STATE",PYL_PARAM_NOT_DEFINED,false);
 
 	int nc = GetParameterCount();
 	for (int p=0;p<nc;p++) {
@@ -176,40 +176,53 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 			_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SET_PARAM \"%s\" \"%s\"",name,GetParamStr(p));
 		}
 
-		AddSequenceCmd(i, cbuf);
+		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 
 	if ( !canNavigate ) {
 		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "CAN_NAVIGATE \"%s\" 0",this->GetName());
-		AddSequenceCmd(i, cbuf);
+		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 	if ( !userParametersEnabled ) {
 		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_PARAMETERS_ENABLED \"%s\" 0",this->GetName());
-		AddSequenceCmd(i, cbuf);
+		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 	if ( !userReleaseEnabled ) {
 		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_RELEASE_ENABLED \"%s\" 0",this->GetName());
-		AddSequenceCmd(i, cbuf);
+		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 	if ( !userCreateEnabled ) {
 		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_CREATE_ENABLED \"%s\" 0",this->GetName());
-		AddSequenceCmd(i, cbuf);
+		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 	if ( !userDestroyEnabled ) {
 		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "USER_DESTROY_ENABLED \"%s\" 0",this->GetName());
-		AddSequenceCmd(i, cbuf);
+		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 	if ( actualizeNotPylonChilds ) {
 		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "ACTUALIZE_NP_CHILDS_ENABLED \"%s\" 1",this->GetName());
-		AddSequenceCmd(i, cbuf);
+		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
-	_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "CURRENT_MFD_PARAM\"%s\" %d",this->GetName(), this->GetMFDSelectedParameter());
-	AddSequenceCmd(i, cbuf);
+	_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "CURRENT_MFD_PARAM \"%s\" %d",this->GetName(), this->GetMFDSelectedParameter());
+	AddSequenceCmd(stateSequenceIndex, cbuf);
 
-	PylonSequence* seq = 0;
-	SelectSequence(i);
+	PylonMesh *pm = this->meshes;
+	while ( pm ) {
+        _snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "ADD_MESH \"%s\" \"%s\" %d %f %f %f",
+                    pm->file,
+                    pm->name,
+                    pm->visMode,
+                    pm->pos.x,
+                    pm->pos.y,
+                    pm->pos.z );
+        AddSequenceCmd( stateSequenceIndex, cbuf );
+        pm = pm->next;
+	}
+
+	PylonSequence* seq = NULL;
+	SelectSequence(stateSequenceIndex);
 	seq = curSeq;
-	if ( seq != 0 ) {
+	if ( seq != NULL ) {
 		seq->Print(cbuf, bufSize);
 		oapiWriteScenario_string (scn, cbuf, "");
 		seq = seq->nextCmd;
@@ -224,7 +237,7 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 	// print the rest of sequences
 	int n = GetSequenceCount();
 	for (int j=0;j<n;j++) {
-		if ( j == i ) continue;
+		if ( j == stateSequenceIndex ) continue;
 		SelectSequence(j);
 		seq = curSeq;
 		if ( seq != 0 ) {
@@ -1031,6 +1044,8 @@ void PylonMesh::Add(CPylon * p, unsigned char *filename, unsigned char *name, in
     {
         m->meshIndex = p->AddMesh((const char *)filename, &pos);
     }
+
+    veccpy( m->pos, pos );
 
 	p->SetMeshVisibilityMode( m->meshIndex, visMode );
 	m->visMode = visMode;
