@@ -507,7 +507,7 @@ int CPylon::CreateSequence(char *name, int type, int execmode) {
 
 	int i = GetSequenceByName(name);
 	if ( i != -1 ) {
-//kk		DeleteSequence(i);
+//		DeleteSequence(i);
 	}
 
 	PylonSequence *ns = new PylonSequence(true, this);
@@ -673,6 +673,24 @@ ATTACHMENTHANDLE CPylon::GetParentAttachment( VESSEL *v ) {
 	return NULL;
 }
 
+VESSEL *CPylon::GetParent( VESSEL *v ) {
+
+    ATTACHMENTHANDLE parentAttachment = CPylon::GetParentAttachment( v );
+
+    if ( parentAttachment == NULL ) {
+        return NULL;
+    }
+
+    OBJHANDLE parentHandle = v->GetAttachmentStatus( parentAttachment );
+
+    if ( parentHandle == NULL ) {
+        return NULL;
+    }
+
+    return oapiGetVesselInterface( parentHandle );
+
+}
+
 // Get root of vessel v in attachment tree
 VESSEL *CPylon::GetRoot( VESSEL *v ) {
 
@@ -695,7 +713,146 @@ VESSEL *CPylon::GetRoot( VESSEL *v ) {
 
 }
 
+double CPylon::GetChildMasses( VESSEL *v ) {
+
+    double mass = 0;
+
+    for ( int i = 0, n = v->AttachmentCount( false ); i < n; i++ ) {
+        ATTACHMENTHANDLE toc = v->GetAttachmentHandle( false, i );
+        OBJHANDLE o = v->GetAttachmentStatus( toc );
+        if ( o != NULL ) {
+            VESSEL *v = oapiGetVesselInterface( o );
+            mass += v->GetMass() + GetChildMasses( v );
+        }
+    }
+
+    return mass;
+
+}
+
+
+void CPylon::addAttachedMasses( bool initialization ) {
+
+    // This pylon was just attached, so subtract its child masses from its empty mass
+    // and add that masses plus its own empty mass to the root empty mass,
+
+    VESSEL *parent = CPylon::GetParent( this );
+    if ( parent != NULL ) {
+
+        bool parentIsPylon = CPylon::IsPylonVessel( parent ) != NULL;
+
+        bool thereIsPylonAncestor = parentIsPylon;
+        if ( ! parentIsPylon ) {
+            VESSEL *ancestor = parent;
+            while ( ! thereIsPylonAncestor && ancestor != NULL ) {
+                VESSEL *ancestorParent = CPylon::GetParent( ancestor );
+                thereIsPylonAncestor = ( CPylon::IsPylonVessel( ancestor ) != NULL ) && ancestorParent != NULL;
+                ancestor = ancestorParent;
+            }
+        }
+
+        VESSEL *root = CPylon::GetRoot( this );
+
+        bool doMassTransfer = !initialization ||
+            ( ( ! parentIsPylon && ! thereIsPylonAncestor ) || root == parent );
+
+        if ( doMassTransfer ) {
+
+            double childMasses = CPylon::GetChildMasses( this );
+
+            if ( ! initialization && childMasses > 0 && this->GetEmptyMass() > childMasses ) {
+                this->SetEmptyMass( this->GetEmptyMass() - childMasses );
+            }
+
+            root->SetEmptyMass( root->GetEmptyMass() + this->GetEmptyMass() + childMasses );
+
+        }
+
+    }
+
+}
+
+void CPylon::subtractAttachedMasses() {
+
+    // This vessel is about to be deattached, so add its child masses to its empty mass
+    // and subtract that masses plus its empty mass from the root
+
+    VESSEL *parent = CPylon::GetParent( this );
+    if ( parent != NULL ) {
+
+        VESSEL *root = CPylon::GetRoot( this );
+
+        double childMasses = CPylon::GetChildMasses( this );
+
+        double m = this->GetEmptyMass() + childMasses;
+
+        if ( childMasses > 0 ) {
+            this->SetEmptyMass( m );
+        }
+
+        if ( root->GetEmptyMass() > m ) {
+            root->SetEmptyMass( root->GetEmptyMass() - m );
+        }
+
+    }
+
+}
+
+
 bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment ) {
+
+    VESSEL *c = oapiGetVesselInterface( child );
+
+	if ( c == NULL ) {
+        return false;
+	}
+
+	CPylon *pc = IsPylonVessel( c );
+	if ( pc != NULL ) {
+        // Virtual version
+        return pc->PylonAttachInternal( parent, child, parent_attachment, child_attachment );
+	}
+	else {
+	    // Generic version
+        return CPylon::AttachInternal( parent, child, parent_attachment, child_attachment );
+	}
+
+}
+
+bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
+
+    VESSEL *c = oapiGetVesselInterface( child );
+
+	if ( c == NULL ) {
+        return false;
+	}
+
+	CPylon *pc = IsPylonVessel( c );
+
+	if ( pc != NULL ) {
+        // Virtual version
+        return pc->PylonDetachInternal( parent, child, parent_attachment, vel );
+	}
+	else {
+	    // Generic version
+        return CPylon::DetachInternal( parent, child, parent_attachment, vel );
+	}
+
+}
+
+bool CPylon::PylonAttachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment ) {
+
+    return CPylon::AttachInternal( parent, child, parent_attachment, child_attachment );
+
+}
+
+bool CPylon::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
+
+	return CPylon::DetachInternal( parent, child, parent_attachment, vel );
+
+}
+
+bool CPylon::AttachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment ) {
 
 	VESSEL *p = oapiGetVesselInterface( parent );
     VESSEL *c = oapiGetVesselInterface( child );
@@ -708,7 +865,7 @@ bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
 	if ( attParent != NULL ) {
         OBJHANDLE o = c->GetAttachmentStatus( attParent );
         if ( o != NULL ) {
-            PylonDetach(o, c->GetHandle(), attParent, 0.0);
+            PylonDetach( o, c->GetHandle(), attParent, 0.0 );
         }
 	}
 
@@ -716,27 +873,16 @@ bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
         return false;
 	}
 
-	OBJHANDLE o = NULL;
-	VESSEL* r = p;
-	double cm = c->GetEmptyMass();
-	while ( o == NULL ) {
-		double rm = r->GetEmptyMass();
-		r->SetEmptyMass( rm + cm );
-		int i = 0, n = r->AttachmentCount( true );
-		while ( i < n && o == NULL ) {
-			ATTACHMENTHANDLE top = r->GetAttachmentHandle( true, i );
-			OBJHANDLE o = r->GetAttachmentStatus( top );
-			i = i + 1;
-		}
-		if ( o == NULL) break;
-		r = oapiGetVesselInterface( o );
-		if ( r == NULL ) break;
-		o = NULL;
+	CPylon *pc = IsPylonVessel( c );
+	if ( pc != NULL ) {
+        pc->addAttachedMasses( false );
 	}
+
 	return true;
+
 }
 
-bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
+bool CPylon::DetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
 
 	if ( parent == NULL || child == NULL ) {
         return false;
@@ -749,109 +895,14 @@ bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
 	    return false;
     }
 
-	CPylon *pp = IsPylonVessel(p), *pc = IsPylonVessel(c);
-
-	ATTACHMENTHANDLE top;
-	OBJHANDLE o = NULL;
-	VESSEL *r = p;
-	double cm = c->GetEmptyMass() + c->GetFuelMass();
-	while ( o == NULL ) {
-		double rm = r->GetEmptyMass();
-		if (rm > cm) r->SetEmptyMass(rm - cm);
-		int i=0, n= r->AttachmentCount( true );
-		while ( i < n && o == NULL) {
-			top = r->GetAttachmentHandle( true, i) ;
-			o = r->GetAttachmentStatus( top );
-			i=i+1;
-		}
-		if ( o == NULL )  break;
-		r = oapiGetVesselInterface( o );
-		if ( r == NULL ) break;
-		o = NULL;
+    CPylon *pc = IsPylonVessel( c );
+	if ( pc != NULL ) {
+        pc->subtractAttachedMasses();
 	}
 
-	bool done = p->DetachChild( parent_attachment, vel );
+	return p->DetachChild( parent_attachment, vel );
 
-	double invdt = oapiGetSimStep(),
-		cmass = c->GetMass() + c->GetFuelMass();
-
-	if (done && invdt > 0) {
-		VECTOR3 force, pos, tempv;
-		invdt = 1 / invdt;
-
-		CPylonRT *prt = (CPylonRT *)pc;
-
-		if (prt==NULL) prt = (CPylonRT *)pp;
-
-		if (prt!=NULL) {
-//commented 2018
-//_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE, "pylon detach 8,  prt=%s",prt->GetName());
-
-			if (prt->rotAxis != PYL_RT_NO_ROTATION || prt->releaseAngVel != 0.0) {
-
-				VESSELSTATUS2 status;
-				status.version = 2;
-				status.flag = 0;
-				status.fuel = NULL;
-				status.thruster = NULL;
-				status.dockinfo = NULL;
-
-				c->GetStatusEx(&status);
-				VECTOR3 localAngVel;
-				switch (prt->rotAxis) {
-				case PYL_RT_ROTATION_X: localAngVel = _V(prt->angVel,0,0); break;
-				case PYL_RT_ROTATION_Y: localAngVel = _V(0,prt->angVel,0); break;
-				case PYL_RT_NO_ROTATION:
-				case PYL_RT_ROTATION_Z: localAngVel = _V(0,0,-prt->angVel); break;
-				}
-				if (prt != c) {
-					VECTOR3 globalAngVel;
-					prt->GlobalRot( localAngVel, globalAngVel );
-
-					VECTOR3 oX, oY, oZ;
-					c->GlobalRot(_V(1,0,0), oX);
-					c->GlobalRot(_V(0,1,0), oY);
-					c->GlobalRot(_V(0,0,1), oZ);
-
-					localAngVel = _V( dotp( globalAngVel, oX ),
-									  dotp( globalAngVel, oY ),
-									  dotp( globalAngVel, oZ ) );
-				}
-
-				status.vrot = localAngVel;
-				c->DefSetStateEx(&status);
-
-			}
-
-			if (prt->hasTraslation) {
-				c->AddForce(prt->unitTrasl * (prt->linVel * invdt), _V(0,0,0));
-			}
-
-		}
-
-		if (vel!=0) {
-			if (pp!=NULL) {
-				r = GetRoot( pp );
-			}
-			if (r != NULL) {
-				VECTOR3 dir;
-				p->GetAttachmentParams(parent_attachment, pos, dir, tempv);
-				if (p != r) {
-					dir+=pos; p->/*GlobalRot-1*/Local2Global(dir, tempv);
-					r->Global2Local(tempv, dir);
-					p->Local2Global(pos, tempv);
-					r->Global2Local(tempv, pos);
-					dir = dir - pos;
-				}
-				force = dir * ( -vel * cmass * invdt );
-				r->AddForce(force, pos);
-			}
-		}
-	}
-
-	return done;
 }
-
 
 CPylon * CPylon::IsPylonVessel(VESSEL *v) {
 	static char *s1 = "PYLON\0";
@@ -889,31 +940,11 @@ void CPylon::SetMFDSelectedParameter(int selectedParameter)
 
 void CPylon::initializePylon() {
 
-    ATTACHMENTHANDLE attParent = CPylon::GetParentAttachment( this );
-	if ( attParent != NULL ) {
-        OBJHANDLE op = this->GetAttachmentStatus( attParent );
-        if ( op != NULL ) {
-            VESSEL *r = oapiGetVesselInterface( op );
-            double cm = GetEmptyMass();
-            op = NULL;
-            while (op==NULL) {
-                double rm = r->GetEmptyMass();
-                r->SetEmptyMass(rm + cm);
-                int	j=0, m= r->AttachmentCount(true);
-                while (j<m && op==NULL) {
-                    ATTACHMENTHANDLE top = r->GetAttachmentHandle(true, j);
-                    op = r->GetAttachmentStatus(top);
-                    j=j+1;
-                }
-                if (op==NULL) break;
-                r = oapiGetVesselInterface(op);
-                if (r==NULL) break;
-                op=NULL;
-            }
+    // Add child masses to root vessel
+    this->addAttachedMasses( true );
 
-        }
-	}
 
+    // Execute STATE sequence
     int n = GetSequenceCount();
     TPylParamValue v; v.type = PYL_PARAM_NOT_DEFINED;
     for (int i=0;i<n;i++) {

@@ -112,6 +112,8 @@ public:
 
 	// --------- End of API ---------
 
+	virtual bool PylonDetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
+
 private:
 
 	void actualizeTraslVectors(void);

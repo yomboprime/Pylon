@@ -246,6 +246,108 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 	CPylon::clbkPreStep(simt, simdt, mjd);
 }
 
+bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
+
+    if ( ! CPylon::PylonDetachInternal( parent, child, parent_attachment, vel ) ) {
+        return false;
+    }
+
+  	VESSEL *p = oapiGetVesselInterface( parent );
+    VESSEL *c = oapiGetVesselInterface( child );
+
+	if ( p == NULL || c == NULL) {
+	    return true;
+    }
+
+	CPylon *pp = CPylon::IsPylonVessel( p );
+	CPylon *pc = CPylon::IsPylonVessel( c );
+
+	if ( pp == NULL || pc == NULL) {
+        return true;
+    }
+
+	double invdt = oapiGetSimStep();
+
+	if ( invdt == 0 ) {
+	    return true;
+	}
+
+	double cmass = c->GetMass();
+
+
+    invdt = 1 / invdt;
+
+    CPylonRT *prt = (CPylonRT *)pc;
+
+    //if ( prt == NULL ) {
+    //    prt = (CPylonRT *)pp;
+    //}
+
+    if ( prt->rotAxis != PYL_RT_NO_ROTATION ) {
+
+        VESSELSTATUS2 status;
+        status.version = 2;
+        status.flag = 0;
+        status.fuel = NULL;
+        status.thruster = NULL;
+        status.dockinfo = NULL;
+        c->GetStatusEx( &status );
+
+        VECTOR3 localAngVel;
+        switch ( prt->rotAxis ) {
+        case PYL_RT_ROTATION_X: localAngVel = _V(prt->angVel,0,0); break;
+        case PYL_RT_ROTATION_Y: localAngVel = _V(0,prt->angVel,0); break;
+        case PYL_RT_NO_ROTATION:
+        case PYL_RT_ROTATION_Z: localAngVel = _V(0,0,prt->angVel); break;
+        }
+        if ( prt != c ) {
+            VECTOR3 globalAngVel;
+            prt->GlobalRot( localAngVel, globalAngVel );
+
+            VECTOR3 oX, oY, oZ;
+            c->GlobalRot(_V(1,0,0), oX);
+            c->GlobalRot(_V(0,1,0), oY);
+            c->GlobalRot(_V(0,0,1), oZ);
+
+            localAngVel = _V( dotp( globalAngVel, oX ),
+                              dotp( globalAngVel, oY ),
+                              dotp( globalAngVel, oZ ) );
+        }
+
+        status.vrot = localAngVel;
+        c->DefSetStateEx(&status);
+
+    }
+
+    if ( prt->hasTraslation ) {
+        c->AddForce( prt->unitTrasl * ( prt->linVel * ( /*cmass*//*TODO ?? * */ invdt ) ), _V(0,0,0));
+    }
+
+    if ( vel!=0 ) {
+
+        VESSEL *r = NULL;
+        if ( pp!=NULL ) {
+            r = GetRoot( pp );
+        }
+        if ( r != NULL ) {
+            VECTOR3 dir, pos, tempv, force;
+
+            p->GetAttachmentParams( parent_attachment, pos, dir, tempv );
+
+            if ( p != r ) {
+                p->/*GlobalRot-1*/Local2Global( dir, tempv );
+                r->Global2Local( tempv, dir );
+                p->Local2Global( pos, tempv );
+                r->Global2Local( tempv, pos );
+            }
+            force = dir * ( -vel * cmass * invdt );
+            r->AddForce( force, pos );
+        }
+    }
+
+	return true;
+}
+
 // ==============================================================
 // OVC functions
 // ==============================================================

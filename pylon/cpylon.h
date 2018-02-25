@@ -124,11 +124,20 @@ public:
 	// Generic management
 
     static ATTACHMENTHANDLE GetParentAttachment( VESSEL *v );
+    static VESSEL *GetParent( VESSEL *v );
     static VESSEL *GetRoot( VESSEL *v );
+    static double GetChildMasses( VESSEL *v );
+
+    static CPylon * IsPylonVessel(VESSEL *v);
 
 	static bool PylonAttach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
 	static bool PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
-	static CPylon * IsPylonVessel(VESSEL *v);
+
+	virtual bool PylonAttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
+	virtual bool PylonDetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
+
+	void addAttachedMasses( bool initialization );
+	void subtractAttachedMasses();
 
 	bool IsFirstFrame();
 
@@ -164,6 +173,9 @@ private:
 
 	void initializePylon(void);
 	void SelectSequence(int i);
+
+	static bool AttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
+	static bool DetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
 
 	friend class PylonSequence;
 	friend class PylonMesh;
