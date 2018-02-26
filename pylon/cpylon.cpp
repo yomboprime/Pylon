@@ -744,12 +744,12 @@ double CPylon::GetChildMasses( VESSEL *v ) {
 }
 
 
-void CPylon::addAttachedMasses( bool initialization ) {
+void CPylon::addAttachedMasses( VESSEL *v, bool initialization ) {
 
     // This pylon was just attached, so subtract its child masses from its empty mass
     // and add that masses plus its own empty mass to the root empty mass,
 
-    VESSEL *parent = CPylon::GetParent( this );
+    VESSEL *parent = CPylon::GetParent( v );
     if ( parent != NULL ) {
 
         bool parentIsPylon = CPylon::IsPylonVessel( parent ) != NULL;
@@ -764,20 +764,20 @@ void CPylon::addAttachedMasses( bool initialization ) {
             }
         }
 
-        VESSEL *root = CPylon::GetRoot( this );
+        VESSEL *root = CPylon::GetRoot( v );
 
         bool doMassTransfer = !initialization ||
             ( ( ! parentIsPylon && ! thereIsPylonAncestor ) || root == parent );
 
         if ( doMassTransfer ) {
 
-            double childMasses = CPylon::GetChildMasses( this );
+            double childMasses = CPylon::GetChildMasses( v );
 
-            if ( ! initialization && childMasses > 0 && this->GetEmptyMass() > childMasses ) {
-                this->SetEmptyMass( this->GetEmptyMass() - childMasses );
+            if ( ! initialization && childMasses > 0 && v->GetEmptyMass() > childMasses ) {
+                v->SetEmptyMass( v->GetEmptyMass() - childMasses );
             }
 
-            root->SetEmptyMass( root->GetEmptyMass() + this->GetEmptyMass() + childMasses );
+            root->SetEmptyMass( root->GetEmptyMass() + v->GetEmptyMass() + childMasses );
 
         }
 
@@ -785,22 +785,22 @@ void CPylon::addAttachedMasses( bool initialization ) {
 
 }
 
-void CPylon::subtractAttachedMasses() {
+void CPylon::subtractAttachedMasses( VESSEL *v ) {
 
     // This vessel is about to be deattached, so add its child masses to its empty mass
     // and subtract that masses plus its empty mass from the root
 
-    VESSEL *parent = CPylon::GetParent( this );
+    VESSEL *parent = CPylon::GetParent( v );
     if ( parent != NULL ) {
 
-        VESSEL *root = CPylon::GetRoot( this );
+        VESSEL *root = CPylon::GetRoot( v );
 
-        double childMasses = CPylon::GetChildMasses( this );
+        double childMasses = CPylon::GetChildMasses( v );
 
-        double m = this->GetEmptyMass() + childMasses;
+        double m = v->GetEmptyMass() + childMasses;
 
         if ( childMasses > 0 ) {
-            this->SetEmptyMass( m );
+            v->SetEmptyMass( m );
         }
 
         if ( root->GetEmptyMass() > m ) {
@@ -886,10 +886,7 @@ bool CPylon::AttachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE
         return false;
 	}
 
-	CPylon *pc = IsPylonVessel( c );
-	if ( pc != NULL ) {
-        pc->addAttachedMasses( false );
-	}
+    CPylon::addAttachedMasses( c, false );
 
 	return true;
 
@@ -908,10 +905,7 @@ bool CPylon::DetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE
 	    return false;
     }
 
-    CPylon *pc = IsPylonVessel( c );
-	if ( pc != NULL ) {
-        pc->subtractAttachedMasses();
-	}
+    CPylon::subtractAttachedMasses( c );
 
 	return p->DetachChild( parent_attachment, vel );
 
@@ -954,7 +948,7 @@ void CPylon::SetMFDSelectedParameter(int selectedParameter)
 void CPylon::initializePylon() {
 
     // Add child masses to root vessel
-    this->addAttachedMasses( true );
+    CPylon::addAttachedMasses( this, true );
 
 
     // Execute STATE sequence

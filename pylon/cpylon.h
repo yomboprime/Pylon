@@ -138,8 +138,8 @@ public:
 	virtual bool PylonAttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
 	virtual bool PylonDetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
 
-	void addAttachedMasses( bool initialization );
-	void subtractAttachedMasses();
+	static void addAttachedMasses( VESSEL *v, bool initialization );
+	static void subtractAttachedMasses( VESSEL *v );
 
 	bool IsFirstFrame();
 
