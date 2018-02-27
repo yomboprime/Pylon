@@ -50,7 +50,7 @@ USER_CREATE_ENABLED vessel enabled(Boolean)
 USER_DESTROY_ENABLED vessel enabled(Boolean)
 *SET_CAMERA_FOV
 *SET_FOCUS
-
+SEND_KEY
 
 	Commands description
 ----------------------------
@@ -302,6 +302,13 @@ Parameters:
 	2: The value indicating enabling/disabling of the option
 Example: USER_DESTROY_ENABLED "aPylon" 0
 
+
+Command: SEND_KEY vessel key(Integer) pressed(Integer)
+Description: Send a buffered key to the vessel (pressed or released event)
+Parameters:
+    1: The vessel
+    2: Key code (decimal integer)
+    3: 1 for pressed, 0 for released.
 
 
 *******************************************************
