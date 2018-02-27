@@ -476,6 +476,9 @@ bool PylonSequence::Execute(void) {
 			OBJHANDLE objH, obj2H;
 			ATTACHMENTHANDLE attH;
 			VESSELSTATUS2 status;
+
+			char *kstate = 0;
+
 //   param: "nam" or "obj:nam"
 //   seq: "nam" or "obj:nam"
 //   value: cast the value to the param or seq type.
@@ -1349,6 +1352,17 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 					activate = false;
 					ves = (VESSEL*)(value.tempRef);
 					oapiSetFocusObject( ves->GetHandle() );
+					return true;
+
+				/*
+					EST_FOCUS vessel
+				*/
+				case PYL_CMD_SEND_KEY:
+					activate = false;
+					ves = (VESSEL*)(value.tempRef);
+
+					ves->SendBufferedKey( nextCmd->value.intValue, nextCmd->nextCmd->value.bolValue, kstate );
+
 					return true;
 
 				default: return true;

@@ -17,7 +17,7 @@ enum TPylParameter {
 	PYL_PARAM_BOOLEAN = 0,
 	PYL_PARAM_BOOLEAN_SWITCH,
 	PYL_PARAM_BOOLEAN_ACTIVATION,
-	
+
 	// Integer
 	PYL_PARAM_INTEGER,
 
@@ -86,7 +86,7 @@ enum TPylTokenType {
 
 typedef struct {
 	int type;
-	union {	
+	union {
 		struct {
 			bool bolValue;
 			bool booleanArray[PYL_NUM_BOL_ARRAY_SIZE];
@@ -116,18 +116,18 @@ typedef struct {
 enum TPylSeqCommand {
 
 	// Set parameter
-	PYL_CMD_SET_PARAM=0, 
+	PYL_CMD_SET_PARAM=0,
 
 	// Call sequence and  cancel sequence
-	PYL_CMD_CALL_SEQ, 
+	PYL_CMD_CALL_SEQ,
 	PYL_CMD_CANCEL_SEQ,
 	PYL_CMD_TERM_SEQ,
 
 	// Sets the cancel sequence. Called when the sequence is cancelled
-	PYL_CMD_SET_CANCEL_SEQUENCE, 
+	PYL_CMD_SET_CANCEL_SEQUENCE,
 
 	// Sets the key activation for the sequence
-	PYL_CMD_SET_SEQUENCE_KEY, 
+	PYL_CMD_SET_SEQUENCE_KEY,
 
 	// Logic control
 	PYL_CMD_RESET,
@@ -137,9 +137,9 @@ enum TPylSeqCommand {
 	PYL_CMD_RESET_IF_NOT,
 
 	// Time events
-	PYL_CMD_DELAY, 
-	PYL_CMD_DELAY_UNTIL_MJD,  
-	PYL_CMD_DELAY_UNTIL_SIMT, 
+	PYL_CMD_DELAY,
+	PYL_CMD_DELAY_UNTIL_MJD,
+	PYL_CMD_DELAY_UNTIL_SIMT,
 
 	// Other events
 	PYL_CMD_WAIT_SEQUENCE,
@@ -164,13 +164,13 @@ enum TPylSeqCommand {
 	PYL_CMD_TRANSFER_FUEL,
 	PYL_CMD_SET_MAIN_THRUST,
 	PYL_CMD_SET_RETRO_THRUST,
-	PYL_CMD_SET_HOVER_THRUST, 
-	PYL_CMD_SET_THRUST, 
+	PYL_CMD_SET_HOVER_THRUST,
+	PYL_CMD_SET_THRUST,
 	PYL_CMD_CHANGE_THRUST_DIRECTION,
 
 	PYL_CMD_SET_CAMERA_OFFSET,
 	PYL_CMD_CREATE_ATTACHMENT,
-	PYL_CMD_SET_TOCHILD_ATT, 
+	PYL_CMD_SET_TOCHILD_ATT,
 	PYL_CMD_SET_ENABLE_FOCUS,
 
 	// Rotating default thrusters
@@ -182,10 +182,10 @@ enum TPylSeqCommand {
 //	PYL_CMD_SET_HOVER_TO_COG, // vessel axis vel
 
 	// OrbiterSound interface
-	PYL_CMD_SOUND_LOAD, 
+	PYL_CMD_SOUND_LOAD,
 	PYL_CMD_SOUND_OPTION,
-	PYL_CMD_SOUND_PLAY, 
-	PYL_CMD_SOUND_STOP, 
+	PYL_CMD_SOUND_PLAY,
+	PYL_CMD_SOUND_STOP,
 	PYL_CMD_SOUND_REPLACE_STOCK,
 
 	// Mesh handling
@@ -194,9 +194,9 @@ enum TPylSeqCommand {
 	PYL_CMD_CLEAR_MESHES,
 
 	// CPylon common properties management
-	PYL_CMD_USER_SEQ_ENABLED, 
+	PYL_CMD_USER_SEQ_ENABLED,
 	PYL_CMD_USER_RELEASE_ENABLED,
-	PYL_CMD_USER_CREATE_ENABLED, 
+	PYL_CMD_USER_CREATE_ENABLED,
 	PYL_CMD_USER_DESTROY_ENABLED,
 	PYL_CMD_ACTUALIZE_NP_CHILDS_ENABLED,
 	PYL_CMD_CAN_NAVIGATE,
@@ -206,6 +206,7 @@ enum TPylSeqCommand {
 	// Other generic commands
 	PYL_CMD_SET_CAMERA_FOV,
 	PYL_CMD_SET_FOCUS,
+	PYL_CMD_SEND_KEY,
 	// PYL_CMD_CREATE_ATTACH_AT_DOCK
 	// PYL_CMD_CREATE_DOCK_AT_ATTACH
 
@@ -241,8 +242,8 @@ private:
 
 	bool CastValue(int cmdType, TPylParamValue *val);
 	bool ConvertValue(int destType, int sourceType, TPylParamValue *source, bool doValidate);
-	bool Validate(int destType, int srcType);	
-	static char *GetToken(char *line, TPylParamValue &value);	
+	bool Validate(int destType, int srcType);
+	static char *GetToken(char *line, TPylParamValue &value);
 	void Print(char *str, int strSize);
 	void Terminate(void);
 
@@ -393,7 +394,9 @@ PylonCommands[PYL_CMD_NOT_DEFINED] = {
 
 	{"SET_CAMERA_FOV\0",2,{PYL_PARAM_SCALAR, PYL_PARAM_SCALAR,0,0,0,0,0,0,0,0,0,0}},
 	{"SET_FOCUS\0",1,{PYL_PARAM_VESSEL_NAME, 0,0,0,0,0,0,0,0,0,0,0}},
-	
+
+	{"SEND_KEY\0",3,{PYL_PARAM_VESSEL_NAME, PYL_PARAM_INTEGER, PYL_PARAM_BOOLEAN,0,0,0,0,0,0,0,0,0}},
+
 };
 
 
