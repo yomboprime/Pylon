@@ -303,12 +303,18 @@ Parameters:
 Example: USER_DESTROY_ENABLED "aPylon" 0
 
 
-Command: SEND_KEY vessel key(Integer) pressed(Integer)
+Command: SEND_KEY vessel key(Integer) pressed(Boolean) leftShift(Boolean) rightShift(Boolean) leftControl(Boolean) rightControl(Boolean) leftAlt(Boolean) rightAlt(Boolean)
 Description: Send a buffered key to the vessel (pressed or released event)
 Parameters:
     1: The vessel
     2: Key code (decimal integer)
-    3: 1 for pressed, 0 for released.
+    3: 1 for key pressed, 0 for key released.
+    4: modifier active (0 or 1) leftShift
+    5: modifier active (0 or 1) rightShift
+    6: modifier active (0 or 1) leftControl
+    7: modifier active (0 or 1) rightControl
+    8: modifier active (0 or 1) leftAlt
+    9: modifier active (0 or 1) rightAlt
 
 
 *******************************************************

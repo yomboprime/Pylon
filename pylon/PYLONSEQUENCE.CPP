@@ -477,7 +477,7 @@ bool PylonSequence::Execute(void) {
 			ATTACHMENTHANDLE attH;
 			VESSELSTATUS2 status;
 
-			char *kstate = 0;
+			bool lShift, rShift, lCtrl, rCtrl, lAlt, rAlt, modifiers;
 
 //   param: "nam" or "obj:nam"
 //   seq: "nam" or "obj:nam"
@@ -1361,7 +1361,20 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 					activate = false;
 					ves = (VESSEL*)(value.tempRef);
 
-					ves->SendBufferedKey( nextCmd->value.intValue, nextCmd->nextCmd->value.bolValue, kstate );
+					lShift = nextCmd->nextCmd->nextCmd->value.bolValue;
+					rShift = nextCmd->nextCmd->nextCmd->nextCmd->value.bolValue;
+					lCtrl = nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->value.bolValue;
+					rCtrl = nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->value.bolValue;
+                    lAlt = nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->value.bolValue;
+					rAlt = nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->value.bolValue;
+
+					modifiers = lShift || rShift || lCtrl || rCtrl || lAlt || rAlt;
+
+					if ( modifiers ) {
+                        ((CPylon*)this->owner)->setKeyMap( lShift, rShift, lCtrl, rCtrl, lAlt, rAlt );
+					}
+
+					ves->SendBufferedKey( nextCmd->value.intValue, nextCmd->nextCmd->value.bolValue, modifiers ? ((CPylon*)this->owner)->keyMap : NULL );
 
 					return true;
 

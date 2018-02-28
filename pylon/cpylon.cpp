@@ -973,6 +973,40 @@ void CPylon::initializePylon() {
 
 }
 
+void CPylon::setKeyMap( bool lShift, bool rShift, bool lCtrl, bool rCtrl, bool lAlt, bool rAlt ) {
+
+    for ( int i = 0; i < 256; i++ ) {
+        this->keyMap[ i ] = 0;
+    }
+
+    char pressed = (char)0x80;
+
+    if ( lShift ) {
+        this->keyMap[ OAPI_KEY_LSHIFT ] = pressed;
+    }
+
+    if ( rShift ) {
+        this->keyMap[ OAPI_KEY_RSHIFT ] = pressed;
+    }
+
+    if ( lCtrl ) {
+        this->keyMap[ OAPI_KEY_LCONTROL ] = pressed;
+    }
+
+    if ( rCtrl ) {
+        this->keyMap[ OAPI_KEY_RCONTROL ] = pressed;
+    }
+
+    if ( lAlt ) {
+        this->keyMap[ OAPI_KEY_LALT ] = pressed;
+    }
+
+    if ( rAlt ) {
+        this->keyMap[ OAPI_KEY_RALT ] = pressed;
+    }
+
+}
+
 PylonMesh::PylonMesh()
 {
 	*file = 0;

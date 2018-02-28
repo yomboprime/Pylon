@@ -147,6 +147,8 @@ public:
 	int GetMFDSelectedParameter();
 	void SetMFDSelectedParameter(int selectedParameter);
 
+	void setKeyMap( bool lShift, bool rShift, bool lCtrl, bool rCtrl, bool lAlt, bool rAlt );
+
 	ATTACHMENTHANDLE attToParent;
 
 private:
@@ -171,6 +173,9 @@ private:
 
 	// Meshes
 	PylonMesh *meshes;
+
+	// Keymap for sending keys modifiers
+	char keyMap[ 256 ];
 
 	void initializePylon(void);
 	void SelectSequence(int i);
