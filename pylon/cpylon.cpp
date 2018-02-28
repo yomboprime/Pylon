@@ -750,7 +750,7 @@ void CPylon::addAttachedMasses( VESSEL *v, bool initialization ) {
 
     VESSEL *root = CPylon::GetRoot( v );
 
-    if ( root != NULL ) {
+    if ( root != v ) {
         if ( initialization ) {
             if ( CPylon::getFirstPylonDescendant( root ) == v ) {
                 root->SetEmptyMass( root->GetEmptyMass() + CPylon::GetChildMasses( root ) );
@@ -758,7 +758,7 @@ void CPylon::addAttachedMasses( VESSEL *v, bool initialization ) {
         }
         else {
             double cm = CPylon::GetChildMasses( v );
-            root->SetEmptyMass( root->GetEmptyMass() + v->GetEmptyMass() + cm );
+            root->SetEmptyMass( root->GetEmptyMass() + v->GetMass() + cm );
             if ( v->GetEmptyMass() > cm ) {
                 v->SetEmptyMass( v->GetEmptyMass() - cm );
             }
@@ -777,10 +777,10 @@ void CPylon::subtractAttachedMasses( VESSEL *v ) {
     // This vessel is about to be detached, so subtract its subtree mass from the root empty mass.
 
     VESSEL *root = CPylon::GetRoot( v );
-    if ( root != NULL ) {
+    if ( root != v ) {
 
         double cm = CPylon::GetChildMasses( v );
-        double m = v->GetEmptyMass() + cm;
+        double m = v->GetMass() + cm;
 
         if ( root->GetEmptyMass() > m ) {
             root->SetEmptyMass( root->GetEmptyMass() - m );
