@@ -12,9 +12,9 @@ inline void randomize(void) { srand((unsigned int)time(NULL)); }
 
 #define frand ( ( (double)rand() ) / RAND_MAX )
 
-#define range(x) (frand*x)
+#define range( x ) ( frand * x )
 
-#define noise(x) ((frand-.5)*x)
+#define noise( x ) ( ( frand - 0.5 ) * x )
 
 #endif
 //__RANDOM__

@@ -735,7 +735,7 @@ double CPylon::GetChildMasses( VESSEL *v ) {
         OBJHANDLE o = v->GetAttachmentStatus( toc );
         if ( o != NULL ) {
             VESSEL *v = oapiGetVesselInterface( o );
-            mass += v->GetMass() + GetChildMasses( v );
+            mass += v->GetMass() + CPylon::GetChildMasses( v );
         }
     }
 
@@ -746,71 +746,75 @@ double CPylon::GetChildMasses( VESSEL *v ) {
 
 void CPylon::addAttachedMasses( VESSEL *v, bool initialization ) {
 
-    // This pylon was just attached, so subtract its child masses from its empty mass
-    // and add that masses plus its own empty mass to the root empty mass,
+    // Vessel v was just attached, so add its subtree mass to the root empty mass.
 
-    VESSEL *parent = CPylon::GetParent( v );
-    if ( parent != NULL ) {
+    VESSEL *root = CPylon::GetRoot( v );
 
-        bool parentIsPylon = CPylon::IsPylonVessel( parent ) != NULL;
-
-        bool thereIsPylonAncestor = parentIsPylon;
-        if ( ! parentIsPylon ) {
-            VESSEL *ancestor = parent;
-            while ( ! thereIsPylonAncestor && ancestor != NULL ) {
-                VESSEL *ancestorParent = CPylon::GetParent( ancestor );
-                thereIsPylonAncestor = ( CPylon::IsPylonVessel( ancestor ) != NULL ) && ancestorParent != NULL;
-                ancestor = ancestorParent;
+    if ( root != NULL ) {
+        if ( initialization ) {
+            if ( CPylon::getFirstPylonDescendant( root ) == v ) {
+                root->SetEmptyMass( root->GetEmptyMass() + CPylon::GetChildMasses( root ) );
             }
         }
-
-        VESSEL *root = CPylon::GetRoot( v );
-
-        bool doMassTransfer = !initialization ||
-            ( ( ! parentIsPylon && ! thereIsPylonAncestor ) || root == parent );
-
-        if ( doMassTransfer ) {
-
-            double childMasses = CPylon::GetChildMasses( v );
-
-            if ( ! initialization && childMasses > 0 && v->GetEmptyMass() > childMasses ) {
-                v->SetEmptyMass( v->GetEmptyMass() - childMasses );
+        else {
+            double cm = CPylon::GetChildMasses( v );
+            root->SetEmptyMass( root->GetEmptyMass() + v->GetEmptyMass() + cm );
+            if ( v->GetEmptyMass() > cm ) {
+                v->SetEmptyMass( v->GetEmptyMass() - cm );
             }
-
-            root->SetEmptyMass( root->GetEmptyMass() + v->GetEmptyMass() + childMasses );
-
         }
-
+    }
+    else {
+        if ( initialization ) {
+            v->SetEmptyMass( v->GetEmptyMass() + CPylon::GetChildMasses( v ) );
+        }
     }
 
 }
 
 void CPylon::subtractAttachedMasses( VESSEL *v ) {
 
-    // This vessel is about to be deattached, so add its child masses to its empty mass
-    // and subtract that masses plus its empty mass from the root
+    // This vessel is about to be detached, so subtract its subtree mass from the root empty mass.
 
-    VESSEL *parent = CPylon::GetParent( v );
-    if ( parent != NULL ) {
+    VESSEL *root = CPylon::GetRoot( v );
+    if ( root != NULL ) {
 
-        VESSEL *root = CPylon::GetRoot( v );
-
-        double childMasses = CPylon::GetChildMasses( v );
-
-        double m = v->GetEmptyMass() + childMasses;
-
-        if ( childMasses > 0 ) {
-            v->SetEmptyMass( m );
-        }
+        double cm = CPylon::GetChildMasses( v );
+        double m = v->GetEmptyMass() + cm;
 
         if ( root->GetEmptyMass() > m ) {
             root->SetEmptyMass( root->GetEmptyMass() - m );
         }
 
+        v->SetEmptyMass( v->GetEmptyMass() + cm );
+
     }
 
 }
 
+CPylon *CPylon::getFirstPylonDescendant( VESSEL *v ) {
+
+    CPylon *pv = CPylon::IsPylonVessel( v );
+
+    if ( pv != NULL ) {
+        return pv;
+    }
+
+    for ( int i = 0, n = v->AttachmentCount( false ); i < n; i++ ) {
+        ATTACHMENTHANDLE toc = v->GetAttachmentHandle( false, i );
+        OBJHANDLE o = v->GetAttachmentStatus( toc );
+        if ( o != NULL ) {
+            VESSEL *cv = oapiGetVesselInterface( o );
+            CPylon *pcv = getFirstPylonDescendant( cv );
+            if ( pcv != NULL ) {
+                return pcv;
+            }
+        }
+    }
+
+    return NULL;
+
+}
 
 bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment ) {
 

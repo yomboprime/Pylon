@@ -123,6 +123,9 @@ public:
 		return orbiterSoundId;
 	}
 
+	// --------- End of API ---------
+
+
 	// Generic management
 
     static ATTACHMENTHANDLE GetParentAttachment( VESSEL *v );
@@ -135,15 +138,11 @@ public:
 	static bool PylonAttach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
 	static bool PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
 
-	virtual bool PylonAttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
-	virtual bool PylonDetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
-
-	static void addAttachedMasses( VESSEL *v, bool initialization );
-	static void subtractAttachedMasses( VESSEL *v );
-
 	bool IsFirstFrame();
 
-	// --------- End of API ---------
+	// Virtual "internal" functions, use PylonAttach and PylonDetach instead
+	virtual bool PylonAttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
+	virtual bool PylonDetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
 
 	int GetMFDSelectedParameter();
 	void SetMFDSelectedParameter(int selectedParameter);
@@ -176,8 +175,13 @@ private:
 	void initializePylon(void);
 	void SelectSequence(int i);
 
-	static bool AttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
+    static bool AttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
 	static bool DetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
+
+	static void addAttachedMasses( VESSEL *v, bool initialization );
+	static void subtractAttachedMasses( VESSEL *v );
+
+	static CPylon *getFirstPylonDescendant( VESSEL *v );
 
 	friend class PylonSequence;
 	friend class PylonMesh;

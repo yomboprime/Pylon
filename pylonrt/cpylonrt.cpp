@@ -72,7 +72,7 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 	}
 
     if ( this->firstFrameAttached ) {
-        GetAttachmentParams( attToParent, pos0, dir0, rot0 );
+        GetAttachmentParams( this->attToParent, pos0, dir0, rot0 );
         veccpy( pos, pos0 );
         firstFrameAttached = false;
     }
