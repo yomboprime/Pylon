@@ -188,6 +188,15 @@ Parameters: vel Velocity of initial impulse in m/s
 Example:
 RELEASE "Carina" 0.3
 
+Command: RELEASE_ATT parent(vessel) att_parent(Integer) velocity
+Description: Release an attached vessel with a initial speed, as the RELEASE command, but this one specifies the name and C attachment index of the parent vessel.
+Duration: Instant
+Parameters:
+	1: The parent vessel
+	2: The attachment of the parent to attach the child (type tochild, C)
+	3: The attachment of the child to use (type toparent, P)
+	4: Velocity of initial impulse in m/s
+
 
 Command: SET_FUEL_LEVEL vessel propellant_resource(Integer) fuel_level(Scalar)
 Description: Sets the fuel level of the propellant resource (tank) identified by its index  to the specified level.
