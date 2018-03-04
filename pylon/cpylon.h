@@ -179,7 +179,9 @@ private:
 	char keyMap[ 256 ];
 
 	// Handle of the vessel which the keyboard is redirected to
-	OBJHANDLE rediretKeysVesselHandle;
+	OBJHANDLE redirectKeysVesselHandle;
+	// Name of that vessel
+	char redirectKeysVesselName[ NAME_SIZE ];
 
 	void initializePylon(void);
 	void SelectSequence(int i);

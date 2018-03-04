@@ -49,6 +49,9 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 
 	meshes = NULL;
 
+	redirectKeysVesselHandle = NULL;
+	redirectKeysVesselName[ 0 ] = 0;
+
 }
 
 // Destructor
@@ -220,8 +223,8 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
         pm = pm->next;
 	}
 
-	if ( this->rediretKeysVesselHandle != NULL ) {
-		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "REDIRECT_KEYS \"%s\" 1", oapiGetVesselInterface( this->rediretKeysVesselHandle )->GetName() );
+	if ( this->redirectKeysVesselHandle != NULL ) {
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "REDIRECT_KEYS \"%s\" 1", redirectKeysVesselName );
 		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 
@@ -284,9 +287,9 @@ int CPylon::clbkConsumeBufferedKey ( DWORD key, bool down, char *kstate ) {
         return 1;
 	}
 
-	if ( this->rediretKeysVesselHandle != NULL ) {
+	if ( this->redirectKeysVesselHandle != NULL ) {
 
-        VESSEL *v = oapiGetVesselInterface( this->rediretKeysVesselHandle );
+        VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
         if ( v != NULL ) {
 
             return v->SendBufferedKey( key, down, kstate );
@@ -299,11 +302,11 @@ int CPylon::clbkConsumeBufferedKey ( DWORD key, bool down, char *kstate ) {
 
 int CPylon::clbkConsumeDirectKey(char *kstate) {
 
-    if ( this->rediretKeysVesselHandle == NULL ) {
+    if ( this->redirectKeysVesselHandle == NULL ) {
         return 0;
     }
 
-    VESSEL *v = oapiGetVesselInterface( this->rediretKeysVesselHandle );
+    VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
     if ( v == NULL ) {
         return 0;
     }

@@ -1386,10 +1386,12 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 					ves = (VESSEL*)(value.tempRef);
 
 					if ( ves->GetHandle() == ((CPylon*)this->owner)->GetHandle() ) {
-                        ((CPylon*)this->owner)->rediretKeysVesselHandle = NULL;
+                        ((CPylon*)this->owner)->redirectKeysVesselHandle = NULL;
+                        ((CPylon*)this->owner)->redirectKeysVesselName[ 0 ] = 0;
 					}
 					else {
-                        ((CPylon*)this->owner)->rediretKeysVesselHandle = ves->GetHandle();
+                        ((CPylon*)this->owner)->redirectKeysVesselHandle = ves->GetHandle();
+                        _snprintf_s( ((CPylon*)this->owner)->redirectKeysVesselName, NAME_SIZE, NAME_SIZE, "%s", ves->GetName() );
 					}
 					return true;
 
