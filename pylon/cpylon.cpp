@@ -228,8 +228,6 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 
-	// todo this->soundName
-
 	PylonSequence* seq = NULL;
 	SelectSequence(stateSequenceIndex);
 	seq = curSeq;
@@ -345,6 +343,41 @@ int CPylon::clbkConsumeDirectKey(char *kstate) {
 	}
 
 	return 0;
+
+}
+
+void CPylon::clbkRCSMode (int mode) {
+
+    if ( this->redirectKeysVesselHandle == NULL ) {
+        return;
+    }
+
+    VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
+    if ( v == NULL ) {
+        return;
+    }
+
+    v->SetAttitudeMode( mode );
+
+}
+
+void CPylon::clbkNavMode (int mode, bool active) {
+
+    if ( this->redirectKeysVesselHandle == NULL ) {
+        return;
+    }
+
+    VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
+    if ( v == NULL ) {
+        return;
+    }
+
+    if ( active ) {
+        v->ActivateNavmode( mode );
+    }
+    else {
+        v->DeactivateNavmode( mode );
+    }
 
 }
 

@@ -58,7 +58,8 @@ public:
     virtual void clbkPreStep(double simt, double simdt, double mjd);
     virtual int clbkConsumeBufferedKey (DWORD key, bool down, char *kstate);
     virtual int clbkConsumeDirectKey(char *kstate);
-
+    virtual void clbkRCSMode (int mode);
+    virtual void clbkNavMode (int mode, bool active);
 
 	// ==============================================================
 	// Pylon API
