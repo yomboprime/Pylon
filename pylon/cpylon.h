@@ -57,6 +57,7 @@ public:
     virtual void clbkSaveState (FILEHANDLE scn);
     virtual void clbkPreStep(double simt, double simdt, double mjd);
     virtual int clbkConsumeBufferedKey (DWORD key, bool down, char *kstate);
+    virtual int clbkConsumeDirectKey(char *kstate);
 
 
 	// ==============================================================
@@ -176,6 +177,9 @@ private:
 
 	// Keymap for sending keys modifiers
 	char keyMap[ 256 ];
+
+	// Handle of the vessel which the keyboard is redirected to
+	OBJHANDLE rediretKeysVesselHandle;
 
 	void initializePylon(void);
 	void SelectSequence(int i);

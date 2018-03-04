@@ -1121,7 +1121,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 
 					if ( RequestLoadVesselWave( ((CPylon*)this->owner)->GetOrbiterSoundId(), i, value.strValue, EXTENDEDPLAY(n) ) )
 					{
-						_snprintf_s(((CPylon*)this->owner)->soundNames[i-1].soundName, NAME_SIZE, NAME_SIZE, "%s", nextCmd->value.strValue );
+						_snprintf_s(((CPylon*)this->owner)->soundNames[i-1].soundName, 100, 100, "%s", nextCmd->value.strValue );
 					}
 					return true;
 
@@ -1346,7 +1346,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 					return true;
 
 				/*
-					EST_FOCUS vessel
+					SET_FOCUS vessel
 				*/
 				case PYL_CMD_SET_FOCUS:
 					activate = false;
@@ -1355,7 +1355,7 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 					return true;
 
 				/*
-					EST_FOCUS vessel
+					SEND_KEY vessel key down lshift rshift lctrl rcotrl lalt salt
 				*/
 				case PYL_CMD_SEND_KEY:
 					activate = false;
@@ -1376,6 +1376,21 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 
 					ves->SendBufferedKey( nextCmd->value.intValue, nextCmd->nextCmd->value.bolValue, modifiers ? ((CPylon*)this->owner)->keyMap : NULL );
 
+					return true;
+
+                /*
+					REDIRECT_KEYS vessel
+				*/
+				case PYL_CMD_REDIRECT_KEYS:
+					activate = false;
+					ves = (VESSEL*)(value.tempRef);
+
+					if ( ves->GetHandle() == ((CPylon*)this->owner)->GetHandle() ) {
+                        ((CPylon*)this->owner)->rediretKeysVesselHandle = NULL;
+					}
+					else {
+                        ((CPylon*)this->owner)->rediretKeysVesselHandle = ves->GetHandle();
+					}
 					return true;
 
 				default: return true;

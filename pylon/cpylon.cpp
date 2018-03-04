@@ -47,7 +47,8 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 
 	orbiterSoundId = -1;
 
-	this->meshes = NULL;
+	meshes = NULL;
+
 }
 
 // Destructor
@@ -219,6 +220,13 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
         pm = pm->next;
 	}
 
+	if ( this->rediretKeysVesselHandle != NULL ) {
+		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "REDIRECT_KEYS \"%s\" 1", oapiGetVesselInterface( this->rediretKeysVesselHandle )->GetName() );
+		AddSequenceCmd(stateSequenceIndex, cbuf);
+	}
+
+	// todo this->soundName
+
 	PylonSequence* seq = NULL;
 	SelectSequence(stateSequenceIndex);
 	seq = curSeq;
@@ -270,23 +278,71 @@ void CPylon::clbkPreStep(double simt, double simdt, double mjd)
 	firstFrame = false;
 }
 
-int CPylon::clbkConsumeBufferedKey (DWORD key, bool down, char *kstate)
-{
-	if (!down) return 0; // only process keydown events
+int CPylon::clbkConsumeBufferedKey ( DWORD key, bool down, char *kstate ) {
 
-	if (KEYMOD_SHIFT (kstate)) {
-	} else if (KEYMOD_CONTROL (kstate)) {
-/*		switch (key) {
-		case OAPI_KEY_:
-			return 1;
-		}
-*/
-	} else {
-		if (this->ActivateSequenceByKey(key)) {
-			return 1;
-		}
+	if ( down && this->ActivateSequenceByKey( key ) ) {
+        return 1;
 	}
+
+	if ( this->rediretKeysVesselHandle != NULL ) {
+
+        VESSEL *v = oapiGetVesselInterface( this->rediretKeysVesselHandle );
+        if ( v != NULL ) {
+
+            return v->SendBufferedKey( key, down, kstate );
+        }
+	}
+
 	return 0;
+
+}
+
+int CPylon::clbkConsumeDirectKey(char *kstate) {
+
+    if ( this->rediretKeysVesselHandle == NULL ) {
+        return 0;
+    }
+
+    VESSEL *v = oapiGetVesselInterface( this->rediretKeysVesselHandle );
+    if ( v == NULL ) {
+        return 0;
+    }
+
+    // TODO Main has complex behaviour with ctrl key modifier
+    //v->SetThrusterGroupLevel( THGROUP_MAIN, KEYDOWN( kstate, OAPI_KEY_ADD ) ? 1.0 : 0.0 );
+
+    // TODO Is there a key for retro thrusters?
+	//v->SetThrusterGroupLevel( THGROUP_RETRO, KEYDOWN( kstate,  ) ? 1.0 : 0.0 );
+
+	// TODO hover is progressive.
+	//v->SetThrusterGroupLevel( THGROUP_HOVER, KEYDOWN( kstate,  ) ? 1.0 : 0.0 );
+
+	int rcsMode = v->GetAttitudeMode();
+	switch  ( rcsMode ) {
+	case RCS_ROT:
+        v->SetThrusterGroupLevel( THGROUP_ATT_PITCHUP, KEYDOWN( kstate, OAPI_KEY_NUMPAD2 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_PITCHDOWN, KEYDOWN( kstate, OAPI_KEY_NUMPAD8 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_YAWLEFT, KEYDOWN( kstate, OAPI_KEY_NUMPAD1 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_YAWRIGHT, KEYDOWN( kstate, OAPI_KEY_NUMPAD3 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_BANKLEFT, KEYDOWN( kstate, OAPI_KEY_NUMPAD4 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_BANKRIGHT, KEYDOWN( kstate, OAPI_KEY_NUMPAD6 ) ? 1.0 : 0.0 );
+        break;
+
+	case RCS_LIN:
+        v->SetThrusterGroupLevel( THGROUP_ATT_RIGHT, KEYDOWN( kstate, OAPI_KEY_NUMPAD3 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_LEFT, KEYDOWN( kstate, OAPI_KEY_NUMPAD1 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_UP, KEYDOWN( kstate, OAPI_KEY_NUMPAD2 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_DOWN, KEYDOWN( kstate, OAPI_KEY_NUMPAD8 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_FORWARD, KEYDOWN( kstate, OAPI_KEY_NUMPAD6 ) ? 1.0 : 0.0 );
+        v->SetThrusterGroupLevel( THGROUP_ATT_BACK, KEYDOWN( kstate, OAPI_KEY_NUMPAD9 ) ? 1.0 : 0.0 );
+        break;
+
+    default:
+        break;
+	}
+
+	return 0;
+
 }
 
 void CPylon::clbkPostCreation (void)
@@ -651,7 +707,8 @@ void CPylon::DeleteSequence(int index)
 	numSeq--;
 }
 
-bool CPylon::ActivateSequenceByKey(DWORD key) {
+bool CPylon::ActivateSequenceByKey( DWORD key ) {
+
 	bool b = false;
 	PylonSequence *seq = sequences;
 	int i = 0;
@@ -674,10 +731,8 @@ bool CPylon::ActivateSequenceByKey(DWORD key) {
 // Returns the P ATTACHEMTNHANDLE which is connected to a parent, or NULL otherwise.
 ATTACHMENTHANDLE CPylon::GetParentAttachment( VESSEL *v ) {
 
-    ATTACHMENTHANDLE pAtt = NULL;
-	int n = v->AttachmentCount( true );
 	for ( int i = 0, n = v->AttachmentCount( true ); i < n; i++ ) {
-		pAtt = v->GetAttachmentHandle( true, i );
+		ATTACHMENTHANDLE pAtt = v->GetAttachmentHandle( true, i );
 		if ( v->GetAttachmentStatus( pAtt ) != NULL ) {
             return pAtt;
 		}

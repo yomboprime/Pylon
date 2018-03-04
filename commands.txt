@@ -51,6 +51,7 @@ USER_DESTROY_ENABLED vessel enabled(Boolean)
 *SET_CAMERA_FOV
 *SET_FOCUS
 SEND_KEY
+REDIRECT_KEYS
 
 	Commands description
 ----------------------------
@@ -182,14 +183,14 @@ Example: ATTACH "Discovery" 0 0 "Carina"
 
 
 Command: RELEASE velocity
-Description: Release an attached vessel with a initial speed. if it is a pylon or is attached to a pylon that was rotating over de Z axis, the detached body will maintain the rotation's angular speed. No angular momentum calcs are performed, but linear momentum is conserved.
+Description: Release an attached vessel with a initial speed. if it is a pylon and was rotating, the angular velocity is maintained. No angular momentum calcs are performed, but linear momentum is conserved.
 Duration: Instant
 Parameters: vel Velocity of initial impulse in m/s
 Example:
 RELEASE "Carina" 0.3
 
 Command: RELEASE_ATT parent(vessel) att_parent(Integer) velocity
-Description: Release an attached vessel with a initial speed, as the RELEASE command, but this one specifies the name and C attachment index of the parent vessel.
+Description: Release an attached vessel with a initial speed and angular velocity, as the RELEASE command, but this one specifies the name and C attachment index of the parent vessel.
 Duration: Instant
 Parameters:
 	1: The parent vessel
@@ -314,6 +315,7 @@ Example: USER_DESTROY_ENABLED "aPylon" 0
 
 Command: SEND_KEY vessel key(Integer) pressed(Boolean) leftShift(Boolean) rightShift(Boolean) leftControl(Boolean) rightControl(Boolean) leftAlt(Boolean) rightAlt(Boolean)
 Description: Send a buffered key to the vessel (pressed or released event)
+Duration: Instant.
 Parameters:
     1: The vessel
     2: Key code (decimal integer)
@@ -325,6 +327,12 @@ Parameters:
     8: modifier active (0 or 1) leftAlt
     9: modifier active (0 or 1) rightAlt
 
+    
+Command: REDIRECT_KEYS vessel 
+Description: Redirect keys pressed by the user while this Pylon is in focus, to the target vessel.
+Duration: Instant.
+Parameters:
+    1: The target vessel. If it is the same as this Pylon, the keys redirection is disabled.
 
 *******************************************************
 *******************************************************
