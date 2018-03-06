@@ -192,7 +192,7 @@ RELEASE "Carina" 0.3
 Command: RELEASE_ATT parent(vessel) att_parent(Integer) velocity
 Description: Release an attached vessel with a initial speed and angular velocity, as the RELEASE command, but this one specifies the name and C attachment index of the parent vessel.
 Duration: Instant
-Parameters:
+Parameters:TS-VC: PRE-DEPLOY 29
 	1: The parent vessel
 	2: The attachment of the parent to attach the child (type tochild, C)
 	3: The attachment of the child to use (type toparent, P)
