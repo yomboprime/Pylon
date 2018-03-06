@@ -270,6 +270,10 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 void CPylon::clbkPreStep(double simt, double simdt, double mjd)
 {
 
+    if ( firstFrame ) {
+        this->initializePylon();
+    }
+
 	if ( this->attToParent != NULL ) {
 		SetAttachmentParams( this->attToParent, pos, dir, rot );
 	}
@@ -386,7 +390,8 @@ void CPylon::clbkPostCreation (void)
 
 	orbiterSoundId = ConnectToOrbiterSoundDLL(GetHandle());
 
-	this->initializePylon();
+	//kk
+	//this->initializePylon();
 
 }
 
