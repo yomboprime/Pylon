@@ -371,6 +371,8 @@ void CPylon::clbkNavMode (int mode, bool active) {
         return;
     }
 
+    _snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"NAVMODE change: %d, %d", mode, active ? 1 : 0 );
+
     VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
     if ( v == NULL ) {
         return;

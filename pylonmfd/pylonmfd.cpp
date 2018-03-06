@@ -450,7 +450,7 @@ void PylonMFD::Update (HDC hDC)
 			PRINTDEBUG;
 			return;
 		}
-//kkk**********************************************************************
+//**********************************************************************
 
 		selectedParameter = pchild->GetMFDSelectedParameter();
 
@@ -502,6 +502,8 @@ void PylonMFD::Update (HDC hDC)
 			} else {PRINTDEBUG; return;}
 
 		} else if (ns != 0){
+
+		    if ( !pchild->IsUserSequence(selSequence) ) selectNextParam();
 
 //sprintf(oapiDebugString(), "sequence = %d, showcmds = %d", selSequence, showCommands);
 

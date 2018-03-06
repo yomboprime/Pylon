@@ -52,6 +52,7 @@ USER_DESTROY_ENABLED vessel enabled(Boolean)
 *SET_FOCUS
 SEND_KEY
 REDIRECT_KEYS
+RESET
 
 	Commands description
 ----------------------------
@@ -334,6 +335,14 @@ Duration: Instant.
 Parameters:
     1: The target vessel. If it is the same as this Pylon, the keys redirection is disabled.
 
+
+Command: RESET
+Description: Resets the sequence so it starts execution from the beginning.
+Duration: Instant.
+Parameters: none.
+
+
+
 *******************************************************
 *******************************************************
 
@@ -469,7 +478,7 @@ visibility:
 						MESHVIS_COCKPIT        2
 						MESHVIS_ALWAYS         3
 						MESHVIS_VC             4
-						MESHVIS_EXTPASS        16
+						MESHVIS_EXTPASS        Add 16 to any of the previous values
 
 x,y,z: coordinates of mesh relative to vessel.
 
