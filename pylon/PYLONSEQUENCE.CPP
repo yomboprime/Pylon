@@ -1081,6 +1081,19 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 						_V(nextCmd->value.dblValue, nextCmd->nextCmd->value.dblValue,nextCmd->nextCmd->nextCmd->value.dblValue));
 					return true;
 
+                /*
+					SET_CAMERA_DIRECTION vessel x y z tilt
+				*/
+				case PYL_CMD_SET_CAMERA_DIRECTION:
+					activate = false;
+					ves = (VESSEL*)(value.tempRef);
+					ves->SetCameraDefaultDirection( unit( _V( nextCmd->value.dblValue,
+                                                              nextCmd->nextCmd->value.dblValue,
+                                                              nextCmd->nextCmd->nextCmd->value.dblValue ) ),
+                                                              nextCmd->nextCmd->nextCmd->nextCmd->value.dblValue * PI / 180.0 );
+                    oapiCameraSetCockpitDir( 0, 0 );
+					return true;
+
 				case PYL_CMD_CREATE_ATTACHMENT: return true;  // vessel id x y x dx dy dz rx ry rz loose(bool)
 				case PYL_CMD_SET_TOCHILD_ATT: return true; // vessel attindex x y x dx dy dz rx ry rz loose(bool)
 

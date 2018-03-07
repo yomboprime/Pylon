@@ -263,7 +263,14 @@ Parameters:
 	2,3,4: The coordinates of the new camera offset(local vessel coordinates)
 Example: SET_CAMERA_OFFSET "aVessel" 3 -2 10
 
-
+Command: SET_CAMERA_DIRECTION dirx(Scalar) diry(Scalar) dirz(Scalar) tilt(Angle)
+Description: Changes the cockpit camera direction.
+Duration: Instant.
+Parameters:
+	1: The vessel to change camera offset.
+	2,3,4: The coordinates of the new camera direction (local vessel coordinates). Must not be (0, 0, 0 )
+	5: Tilt angle (0 for horizontal)
+Example: SET_CAMERA_DIRECTION "aVessel" 3 -2 10 45
 
 Command: SET_ENABLE_FOCUS vessel enabled(Boolean)
 Description: Enables or disables the ability of the vessel to receive user focus.
