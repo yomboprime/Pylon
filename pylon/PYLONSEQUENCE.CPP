@@ -18,7 +18,6 @@ PylonSequence::PylonSequence(bool mainSeq, void *owner) {
 	finished = true;
 	finishedcommand = false;
 
-	activateByKey = false;
 	activationKey = 0;
 
 
@@ -182,8 +181,7 @@ char *PylonSequence::AddCmd(char *cmd, TPylParamValue &val) {
 	}
 	if ( strcmp(name,"STATE")!=0 )
 	{
-		if (command->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE ||
-			command->cmdcode == PYL_CMD_SET_SEQUENCE_KEY ) {
+		if (command->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE ) {
 /*char s[80];
 command->Print(s,80);
 _snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "createSETCANCELSEQ: (%f)",oapiGetSimTime());
@@ -293,8 +291,6 @@ bool PylonSequence::Execute(void) {
 					PylonSequence *ps = nextCmd;
 					if (ps && ps->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE)
 						ps = ps->nextSeq;
-					if (ps && ps->cmdcode == PYL_CMD_SET_SEQUENCE_KEY)
-						ps = ps->nextSeq;
 					bool term = (mode == SEQ_MODE_PARALLEL);
 					while (ps) {
 						if (ps->valid) {
@@ -325,8 +321,6 @@ bool PylonSequence::Execute(void) {
 				} else {
 					cmdcurrent = nextCmd;
 					if (cmdcurrent && cmdcurrent->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE)
-						cmdcurrent = cmdcurrent->nextSeq;
-					if (cmdcurrent && cmdcurrent->cmdcode == PYL_CMD_SET_SEQUENCE_KEY)
 						cmdcurrent = cmdcurrent->nextSeq;
 					while (cmdcurrent) {
 						if (cmdcurrent->valid) {
@@ -361,8 +355,6 @@ bool PylonSequence::Execute(void) {
 					PylonSequence *ps = nextCmd;
 					if (ps && ps->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE)
 						ps = ps->nextSeq;
-					if (ps && ps->cmdcode == PYL_CMD_SET_SEQUENCE_KEY)
-						ps = ps->nextSeq;
 					bool term = (mode == SEQ_MODE_PARALLEL);
 					while (ps) {
 						if (!ps->finishedcommand) {
@@ -391,8 +383,6 @@ bool PylonSequence::Execute(void) {
 				}
 				else {
 					if (cmdcurrent && cmdcurrent->cmdcode == PYL_CMD_SET_CANCEL_SEQUENCE)
-						cmdcurrent = cmdcurrent->nextSeq;
-					if (cmdcurrent && cmdcurrent->cmdcode == PYL_CMD_SET_SEQUENCE_KEY)
 						cmdcurrent = cmdcurrent->nextSeq;
 
 					while (cmdcurrent) {
@@ -567,8 +557,14 @@ bool PylonSequence::Execute(void) {
 					PYL_CMD_SET_SEQUENCE_KEY sequence key
 				*/
 				case PYL_CMD_SET_SEQUENCE_KEY: //key
-					((PylonSequence*)this->caller)->activateByKey = true;
-					((PylonSequence*)this->caller)->activationKey = value.intValue;
+
+				    p = (CPylon*)(value.tempRef);
+					if (p==NULL) return true;
+					dw = value.tempIndex;
+					ps = p->sequences;
+					while (dw>0 && ps) {ps=ps->nextSeq;dw--;}
+					if (ps==NULL) return true;
+                    ps->activationKey = nextCmd->value.intValue;
 					return true;
 					break;
 
@@ -1761,8 +1757,6 @@ void PylonSequence::Terminate(void) {
 		PylonSequence *ps = nextCmd;
 		if (mode > SEQ_MODE_SEQUENTIAL) {
 			if (ps && ps->value.type == PYL_CMD_SET_CANCEL_SEQUENCE)
-				ps = ps->nextSeq;
-			if (ps && ps->value.type == PYL_CMD_SET_SEQUENCE_KEY)
 				ps = ps->nextSeq;
 
 			while (ps!=NULL) {

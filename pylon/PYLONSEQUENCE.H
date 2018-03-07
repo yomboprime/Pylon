@@ -265,7 +265,6 @@ private:
 	};
 	TPylParamValue value;
 
-	bool activateByKey;
 	DWORD activationKey;
 
 	PylonSequence *nextCmd, *nextSeq;
@@ -337,7 +336,7 @@ PylonCommands[PYL_CMD_NOT_DEFINED] = {
 	{"CANCEL_SEQ\0",2,{PYL_PARAM_SEQUENCE_NAME, PYL_PARAM_NOT_DEFINED,0,0,0,0,0,0,0,0,0,0}},
 	{"TERM_SEQ\0",1,{PYL_PARAM_SEQUENCE_NAME, 0,0,0,0,0,0,0,0,0,0,0}},
 	{"SET_CANCEL_SEQUENCE\0",1,{PYL_PARAM_SEQUENCE_NAME, 0,0,0,0,0,0,0,0,0,0,0}},
-	{"SET_SEQUENCE_KEY\0",1,{PYL_PARAM_INTEGER, 0,0,0,0,0,0,0,0,0,0,0}},
+	{"SET_SEQUENCE_KEY\0",2,{PYL_PARAM_SEQUENCE_NAME,PYL_PARAM_INTEGER, 0,0,0,0,0,0,0,0,0,0}},
 
 	{"RESET\0",0,{0, 0,0,0,0,0,0,0,0,0,0,0}},
 	{"**SKIP_IF\0",1,{PYL_PARAM_BOOLEAN, 0,0,0,0,0,0,0,0,0,0,0}},

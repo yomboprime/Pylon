@@ -223,12 +223,25 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
         pm = pm->next;
 	}
 
+	PylonSequence* seq;
+	int n = GetSequenceCount();
+	for ( int j = 0; j < n;j++ ) {
+		if ( j == stateSequenceIndex ) continue;
+		SelectSequence( j );
+		seq = curSeq;
+		if ( seq != 0 && seq->activationKey ) {
+            _snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SET_SEQUENCE_KEY \"%s:%s\" %d", this->GetName(), seq->name, seq->activationKey );
+            AddSequenceCmd( stateSequenceIndex, cbuf );
+		}
+	}
+
+
 	if ( this->redirectKeysVesselHandle != NULL ) {
 		_snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "REDIRECT_KEYS \"%s\" 1", redirectKeysVesselName );
 		AddSequenceCmd(stateSequenceIndex, cbuf);
 	}
 
-	PylonSequence* seq = NULL;
+	seq = NULL;
 	SelectSequence(stateSequenceIndex);
 	seq = curSeq;
 	if ( seq != NULL ) {
@@ -244,7 +257,7 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 	}
 
 	// print the rest of sequences
-	int n = GetSequenceCount();
+	n = GetSequenceCount();
 	for (int j=0;j<n;j++) {
 		if ( j == stateSequenceIndex ) continue;
 		SelectSequence(j);
@@ -621,7 +634,7 @@ int CPylon::CreateSequence(char *name, int type, int execmode) {
 
 	PylonSequence *ns = new PylonSequence(true, this);
 
-	if(strcmp("STATE",name)==0) ns->activateByKey = false;
+	if(strcmp("STATE",name)==0) ns->activationKey = 0;
 
 	strncpy_s(ns->name, NAME_SIZE, name, NAME_SIZE);
 	if (execmode<0) execmode = 0; if (execmode >= SEQ_MODE_LAST) execmode = SEQ_MODE_LAST-1;
@@ -753,8 +766,7 @@ bool CPylon::ActivateSequenceByKey( DWORD key ) {
 	PylonSequence *seq = sequences;
 	int i = 0;
 	while (seq) {
-//		_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"-(B2)tecla %d, i=%d, act=%d,seqkey=%d",key,i,seq->activateByKey?1:0, seq->activationKey);
-		if (seq->activateByKey && seq->activationKey == key) {
+		if ( seq->activationKey == key ) {
 			ActivateSequence( i );
 			b = true;
 		}
