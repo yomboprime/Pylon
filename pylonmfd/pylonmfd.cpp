@@ -15,7 +15,6 @@
 // Global variables
 
 int g_MFDmode; // identifier for new MFD mode
-PylonMFD *mfdInstance; //Instance of mfd
 
 //Some strings
 const char* strings[1]= {
@@ -25,40 +24,33 @@ const char* strings[1]= {
 // ==============================================================
 // API interface
 
-DLLCLBK void opcDLLInit (HINSTANCE hDLL)
-{
-	static char *name = "Pylon";       // MFD mode name
+DLLCLBK void InitModule( HINSTANCE hDLL ) {
+	static char *name = "Pylon";
 	MFDMODESPECEX spec;
 	spec.name = name;
-	spec.key = OAPI_KEY_P;            // MFD mode selection key
+	spec.key = OAPI_KEY_P;
 	spec.context = NULL;
-	spec.msgproc = PylonMFD::MsgProc;  // MFD mode callback function
+	spec.msgproc = PylonMFD::MsgProc;
 
 	// Register the new MFD mode with Orbiter
 	g_MFDmode = oapiRegisterMFDMode (spec);
 
-	// Initialize plugin
-	mfdInstance = NULL;
 }
 
-DLLCLBK void opcDLLExit (HINSTANCE hDLL)
-{
+DLLCLBK void ExitModule (HINSTANCE hDLL) {
 	// Unregister the custom MFD mode when the module is unloaded
-	oapiUnregisterMFDMode (g_MFDmode);
+	oapiUnregisterMFDMode( g_MFDmode );
 }
-
-/*DLLCLBK void opcTimestep (double SimT, double SimDT, double mjd) {
-	static int t=-1;
-}*/
 
 // ==============================================================
 // MFD class constructor and destructor
 
 // Constructor
-PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
-: MFD (w, h, vessel)
+PylonMFD::PylonMFD ( DWORD w, DWORD h, VESSEL *vessel)
+: MFD2 (w, h, vessel)
 {
-//	mfdInstance = this; // set the current instance
+
+    brush1 = oapiCreateBrush( this->GetDefaultColour( 1, 1 ) );
 
     selectedAttachmentIndex = selectedParameter = selParamtype = selSequence = 0;
 
@@ -122,7 +114,7 @@ PylonMFD::PylonMFD (DWORD w, DWORD h, VESSEL *vessel)
 // Destructor
 PylonMFD::~PylonMFD()
 {
-	mfdInstance = NULL;
+	oapiReleaseBrush( brush1 );
 }
 
 // ==============================================================
@@ -332,6 +324,260 @@ void PylonMFD::ReadStatus(FILEHANDLE scn) {
 // ==============================================================
 // Repaint the MFD
 
+
+bool PylonMFD::Update (oapi::Sketchpad *skp) {
+
+
+    this->Title( skp, strings[0] );
+
+    DWORD width = GetWidth();
+    DWORD height = GetHeight();
+
+    /*
+    skp->SetPen( this->GetDefaultPen( 0, 0, 1 ) );
+    skp->Rectangle( 100, 100, 150, 150 );
+
+    oapi::IVECTOR2 points[3];
+    points[0].x = 200;
+    points[0].y = 200;
+    points[1].x = 300;
+    points[1].y = 256;
+    points[2].x = 220;
+    points[2].y = 340;
+    skp->SetPen( NULL );
+    skp->SetBrush( this->brush1 );
+    skp->Polygon( points, 3 );
+    */
+
+    DWORD cSize = skp->GetCharSize();
+    int lineHeight = cSize & 0x0FFFF;
+    //lineHeight = (int)( lineHeight * 1.5 );
+    int charWidth = ( cSize & 0xFFFF0000 ) >> 16;
+    int tabSize = 2 * charWidth;
+
+    // Set colors, etc
+    // Default color is white
+    skp->SetTextColor( this->GetDefaultColour( 2, 0 ) );
+    skp->SetFont( this->GetDefaultFont( 0 ) );
+    skp->SetBrush( NULL );
+
+    DWORD x = 2 * charWidth;
+    DWORD y = lineHeight * 2;
+
+    #define print( msg ) { skp->Text( x, y, msg, strlen( msg ) ); y += lineHeight; }
+
+    // Debug is red
+    #define  PRINTDEBUG	{ skp->SetTextColor( this->GetDefaultColour( 3, 0 ) ); x = 2 * charWidth; y += lineHeight; print( debugString ) }
+
+	#define RESET_LINE line = lineHeight * 3
+
+
+
+    // todo: aqui se asume que se tiene focus y focusH validos.
+    // usar oapiGetFocusObject para ver si ha cambiado el focus, y si
+    // es asi actualizar todas las variables llamando a selectCurrentParameter
+    // (ademas se puede poner a 0 antes)
+
+	char s[NAME_SIZE], s2[NAME_SIZE];
+
+	if (focus == NULL || focusH == NULL) {
+		print( "No object in focus." );
+		focus = NULL;
+		focusH = NULL;
+		selectedAttachment = NULL;
+		selectedParameter = 0;
+		PRINTDEBUG;
+		return true;
+	}
+
+	// Print the parent and actual vessel.
+
+	int i=0,n = focus->AttachmentCount(true);
+	ATTACHMENTHANDLE attachH;
+	OBJHANDLE pH = NULL;
+	VESSEL *p = NULL;
+	while (i<n) {
+		attachH = focus->GetAttachmentHandle(true, i);
+		pH = focus->GetAttachmentStatus(attachH);
+		if (pH!=NULL) i=n;
+		i++;
+	}
+	if (pH!=NULL) {
+		p = oapiGetVesselInterface(pH);
+	}
+
+	oapiGetObjectName(focusH, s2, NAME_SIZE);
+	sprintf(s,"Vessel: %s", s2);
+	print( s );
+	if (p!=NULL) {
+		oapiGetObjectName(pH, s2, NAME_SIZE);
+		sprintf(s,"Parent: %s", s2);
+		print( s );
+	}
+
+	double mass=focus->GetEmptyMass();
+	sprintf(s,"Mass: %.0f", mass);
+	print( s );
+
+
+	// Sub-object management
+
+
+	// Print attachment info
+	n = focus->AttachmentCount(false);
+	if (n==0) {
+		selectedAttachment = NULL;
+		print( "No attachments in vessel." );
+		PRINTDEBUG;
+		return true;
+	}
+	selectCurrentParameter();
+
+	if (selectedAttachment!=NULL) {
+		y += lineHeight;
+		sprintf(s,"Attachment %d of %d", selectedAttachmentIndex+1, n);
+		print( s );
+		if (childH == NULL) {
+			sprintf(s,"Id: %s (Status: Empty)", focus->GetAttachmentId(selectedAttachment));
+			print( s );
+			PRINTDEBUG;
+			return true;
+		}
+
+		sprintf(s,"Id: %s", focus->GetAttachmentId(selectedAttachment));
+		print( s );
+		sprintf(s,"Sub-vessel: %s",child->GetName());
+		print( s );
+
+	} else {
+		sprintf(s,"Class: %s",child->GetClassName());
+		print( s );
+	}
+	x += tabSize;
+	y += lineHeight;
+
+
+    // Print child info
+
+    if (pchild == NULL) {
+        PRINTDEBUG;
+        return true;
+    }
+
+    // print parameter info
+    x += tabSize;
+    int np = pchild->GetParameterCount();
+    int ns = pchild->GetSequenceCount();
+
+    if (np+ns==0) {
+        print( "No user parameters or sequences." );
+        PRINTDEBUG;
+        return true;
+    }
+//**********************************************************************
+
+    selectedParameter = pchild->GetMFDSelectedParameter();
+
+    if (selectedParameter<np && pchild!=NULL && ( !pchild->userParametersEnabled || !showCommands ) ) {
+        selSequence=0;
+        selectedParameter=np;
+        if ( !pchild->IsUserSequence(selSequence) ) selectNextParam();
+    }
+
+    if (selectedParameter<np) {
+
+        // Green
+        skp->SetTextColor( this->GetDefaultColour( 0, 0 ) );
+
+        int nup = np, upi = 0, i = 0;
+        while (i < selectedParameter) {
+            if (pchild->userParametersEnabled && pchild->IsUserParameter(i)) upi++;
+            else nup--;
+            i++;
+        }
+        while (i < np) {
+            if (!(pchild->userParametersEnabled && pchild->IsUserParameter(i))) nup--;
+            i++;
+        }
+
+        sprintf(s,"Parameter %d of %d", upi+1, nup);
+        print( s );
+
+        sprintf(s,"Name: %s", pchild->GetParameterName(selectedParameter));
+        print( s );
+        sprintf(s,"Type: %s", PylonParamTypeName[selParamtype]);
+        print( s );
+
+
+        // Parameter
+        if (selParamtype < PYL_PARAM_INTEGER) {
+            bool value = pchild->GetParamBol(selectedParameter);
+            sprintf(s,"Value: %s", PylonBoolParamTypeName[selParamtype][value]);
+            print( s );
+        } else if (selParamtype < PYL_PARAM_SCALAR) {
+            int value = pchild->GetParamInt(selectedParameter);
+            sprintf(s,"Value: %d", value);
+            print( s );
+        } else if (selParamtype < PYL_PARAM_STRING) {
+            double value = pchild->GetParamDbl(selectedParameter);
+            sprintf(s,"Value: %f", value);
+            print( s );
+        } else if (selParamtype < PYL_PARAM_NOT_DEFINED) {
+            char *value = pchild->GetParamStr(selectedParameter);
+            sprintf(s,"Value: %s", value);
+            print( s );
+        } else {
+            PRINTDEBUG;
+            return true;
+        }
+
+    } else if (ns != 0){
+
+        // Blue
+        skp->SetTextColor( this->GetDefaultColour( 4, 0 ) );
+
+        if ( !pchild->IsUserSequence(selSequence) ) selectNextParam();
+
+//sprintf(oapiDebugString(), "sequence = %d, showcmds = %d", selSequence, showCommands);
+
+        int nus = ns, usi = 0, i = 0;
+        while (i < selSequence) {
+            if (pchild->IsUserSequence(i)) usi++;
+            else nus--;
+            i++;
+        }
+        while (i < ns) {
+            if (!pchild->IsUserSequence(i)) nus--;
+            i++;
+        }
+
+        sprintf(s,"Sequence %d of %d", usi+1, nus);
+        print( s );
+
+        if (selParamtype==PYL_PARAM_NOT_DEFINED)
+            sprintf(s,"Name: %s", pchild->GetSequenceName(selSequence));
+        else
+            sprintf(s,"Name: %s (%s)", pchild->GetSequenceName(selSequence), PylonParamTypeName[selParamtype]);
+        print( s );
+
+        if (!pchild->IsSequenceValid(selSequence))
+            sprintf(s,"Not valid");
+        else if (pchild->IsSequenceCancelling(selSequence))
+            sprintf(s,"Cancelling");
+        else
+            sprintf(s,"%s", &PylonBoolParamTypeName[PYL_PARAM_BOOLEAN_ACTIVATION][pchild->IsSequenceActive(selSequence)]);
+        print( s );
+    }
+
+	// Print debug
+	PRINTDEBUG;
+
+    return true;
+
+}
+
+
+/*
 #define LINE 12
 #define TAB 10
 void print(HDC hDC, int i, int *j, LPCTSTR cad) {
@@ -341,13 +587,8 @@ void print(HDC hDC, int i, int *j, LPCTSTR cad) {
 
 void PylonMFD::Update (HDC hDC)
 {
-/*
-    int kk = 34;
-    if ( kk > 0 ) {
-        return;
-    }
-*/
 	Title (hDC, strings[0]);
+
 // todo: aqui se asume que se tiene focus y focusH validos.
 // usar oapiGetFocusObject para ver si ha cambiado el focus, y si
 // es asi actualizar todas las variables llamando a selectCurrentParameter
@@ -540,6 +781,8 @@ void PylonMFD::Update (HDC hDC)
 	// Print debug
 	PRINTDEBUG;
 }
+*/
+
 
 // ==============================================================
 // MFD message parser
