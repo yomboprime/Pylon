@@ -22,103 +22,6 @@ const char* strings[1]= {
 };
 
 // ==============================================================
-// API interface
-
-DLLCLBK void InitModule( HINSTANCE hDLL ) {
-	static char *name = "Pylon";
-	MFDMODESPECEX spec;
-	spec.name = name;
-	spec.key = OAPI_KEY_P;
-	spec.context = NULL;
-	spec.msgproc = PylonMFD::MsgProc;
-
-	// Register the new MFD mode with Orbiter
-	g_MFDmode = oapiRegisterMFDMode (spec);
-
-}
-
-DLLCLBK void ExitModule (HINSTANCE hDLL) {
-	// Unregister the custom MFD mode when the module is unloaded
-	oapiUnregisterMFDMode( g_MFDmode );
-}
-
-// ==============================================================
-// MFD class constructor and destructor
-
-// Constructor
-PylonMFD::PylonMFD ( DWORD w, DWORD h, VESSEL *vessel)
-: MFD (w, h, vessel)
-{
-
-    //brush1 = oapiCreateBrush( this->GetDefaultColour( 1, 1 ) );
-
-    selectedAttachmentIndex = selectedParameter = selParamtype = selSequence = 0;
-
-	showCommands = 0;
-
-	strvel[0]=0;
-	objnameIndex = 0;
-	*objectName=0;
-	className[0]=0;
-	debugString[0]=0;
-
-	initfocusH = oapiGetFocusObject();
-	if (initfocusH==NULL)
-		initfocus = NULL;
-	else
-		initfocus = oapiGetVesselInterface(initfocusH);
-	focusH = initfocusH;
-	focus = initfocus;
-
-	if ( focus == NULL ) {
-        selectedAttachment = NULL;
-        selectedParameter = -1; selSequence = -1;
-        return;
-	}
-
-	if ( focus->AttachmentCount( false ) > 0) {
-		selectedAttachment = focus->GetAttachmentHandle( false, 0 );
-	}
-	else {
-        selectedAttachment = NULL;
-	}
-
-	child = NULL;
-	childH = NULL;
-	pchild = NULL;
-	bool b = selectCurrentParameter();
-/*
-	if (b) {
-		int np = pchild->GetParameterCount(), ns = pchild->GetSequenceCount();
-		if (!pchild->userParametersEnabled || showCommands ) {
-			selectedParameter = np;
-			selSequence = 0;
-
-			if ( !pchild->IsUserSequence(selSequence) ) selectNextParam();
-		}
-		while (b) {
-			if (selectedParameter >= np) {
-				b = !pchild->IsUserSequence(selectedParameter - np);
-			} else {
-				b = !(pchild->userParametersEnabled && pchild->IsUserParameter(selectedParameter));
-			}
-			if (b) selectNextParam();
-			if (selectedParameter >= np + ns) {
-				selectedParameter = -1; selSequence = -1;
-			}
-		}
-	}
-*/
-}
-
-// Destructor
-PylonMFD::~PylonMFD()
-{
-	//oapiReleaseBrush( brush1 );
-}
-
-// ==============================================================
-// USER interface
 
 // Prototypes of Callbacks for Input Boxes
 bool cbCreateObject(void *id, char *str, void *data);
@@ -129,211 +32,162 @@ bool cbSetParam(void *id, char *str, void *data);
 bool cbActivateSeq(void *id, char *str, void *data);
 bool cbCancelSeq(void *id, char *str, void *data);
 
-// Return button labels
-char *PylonMFD::ButtonLabel (int bt)
-{
-	// The labels for the buttons used by the MFD
-	static char *label[12] = {"AT-", "AT+", "CRT", "RLS", "DES", "P-", "UP", "DWN", "SET", "INC", "DEC", "P+"};
-	return (bt < 12 ? label[bt] : 0);
+// ==============================================================
+// API interface
+DLLCLBK void InitModule( HINSTANCE hDLL ) {
+
+	static char *name = "Pylon";
+
+	MFDMODESPECEX spec;
+	spec.name = name;
+	spec.key = OAPI_KEY_P;
+	spec.context = NULL;
+
+	// Check Orbiter version.
+	// The PylonMFD2010 class has the old graphics, the PylonMFD class has the new Sketchpad graphics
+	if ( oapiGetOrbiterVersion() >= 160828 ) {
+        spec.msgproc = PylonMFD::MsgProc;
+	}
+	else {
+        spec.msgproc = PylonMFD2010::MsgProc;
+	}
+
+	// Register the new MFD mode with Orbiter
+	g_MFDmode = oapiRegisterMFDMode( spec );
+
 }
 
-// Return button menus
-int PylonMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
-{
-	// The menu descriptions for the buttons
-	static const MFDBUTTONMENU mnu[12] = {
-	   //"1234567890123456"
-		{"<- Select prev.",
-		 "   attachment.", 'Q'},
-		{"<- Select next",
-		 "   attachment.", 'A'},
-		{"<- Create object",
-		 "   in attachment", 'C'},
-		{"<- Release",
-		 "   object.", 'R'},
-		{"<- Destroy",
-		 "   object.", 'D'},
- 		{"<- Select prev.",
-		 "   pylon param.", 'Z'},
+DLLCLBK void ExitModule( HINSTANCE hDLL ) {
 
-		{" Go up in the ->",
-		 "    structure.", 'W'},
-		{"   Go down in ->",
-		 "the structure.", 'S'},
-		{"Set parameter ->",
-		 "       value. ", 'V'},
-		{"    Increment ->",
-		 " param. value.", 'N'},
-		{"    Decrement ->",
-		 " param. value.", 'B'},
- 		{"  Select next ->",
-		 "  pylon param.", 'X'},
+	// Unregister the custom MFD mode when the module is unloaded
+	oapiUnregisterMFDMode( g_MFDmode );
 
-	};
-	if (menu) *menu = mnu;
-	return 12; // return the number of buttons used
+}
+
+// ==============================================================
+// MFD classes
+
+// 2010
+
+// Constructor
+PylonMFD2010::PylonMFD2010( DWORD w, DWORD h, VESSEL *vessel)
+: MFD( w, h, vessel ), PylonMFDInnerClass() {
+    // Nothing to do here
+}
+
+// Destructor
+PylonMFD2010::~PylonMFD2010() {
+    // Nothing to do here
+}
+
+// MFD message parser
+int PylonMFD2010::MsgProc( UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam ) {
+
+	switch (msg) {
+/*
+	case OAPI_MSG_MFD_OPENED:
+		// Our new MFD mode has been selected, so we create the MFD and
+		// return a pointer to it.
+		return (int)(new PylonMFD (LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam));
+*/
+        case OAPI_MSG_MFD_OPENEDEX:
+            MFDMODEOPENSPEC *ospec = (MFDMODEOPENSPEC*)wparam;
+            return (int)( new PylonMFD2010( ospec->w, ospec->h, (VESSEL*)lparam ) );
+	}
+	return 0;
+}
+
+
+char *PylonMFD2010::ButtonLabel (int bt) {
+    return this->serviceButtonLabel( bt );
+}
+
+int PylonMFD2010::ButtonMenu (const MFDBUTTONMENU **menu) const {
+    return this->serviceButtonMenu( menu );
+}
+
+bool PylonMFD2010::ConsumeButton (int bt, int event) {
+    return this->serviceConsumeButton( bt, event );
+}
+
+bool PylonMFD2010::ConsumeKeyBuffered(DWORD key) {
+    return this->serviceConsumeKeyBuffered( key );
+}
+
+void PylonMFD2010::WriteStatus(FILEHANDLE scn) const {
+    this->serviceWriteStatus( scn );
+}
+
+void PylonMFD2010::ReadStatus(FILEHANDLE scn) {
+    this->serviceReadStatus( scn );
+}
+
+// ==============================================================
+
+// > 2010
+
+// Constructor
+PylonMFD::PylonMFD( DWORD w, DWORD h, VESSEL *vessel)
+: MFD2( w, h, vessel ), PylonMFDInnerClass() {
+
+    //brush1 = oapiCreateBrush( this->GetDefaultColour( 1, 1 ) );
+}
+
+// Destructor
+PylonMFD::~PylonMFD() {
+	//oapiReleaseBrush( brush1 );
+}
+
+// MFD message parser
+int PylonMFD::MsgProc( UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam ) {
+
+	switch (msg) {
+/*
+	case OAPI_MSG_MFD_OPENED:
+		// Our new MFD mode has been selected, so we create the MFD and
+		// return a pointer to it.
+		return (int)(new PylonMFD (LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam));
+*/
+        case OAPI_MSG_MFD_OPENEDEX:
+            MFDMODEOPENSPEC *ospec = (MFDMODEOPENSPEC*)wparam;
+            return (int)( new PylonMFD( ospec->w, ospec->h, (VESSEL*)lparam ) );
+	}
+	return 0;
+}
+
+char *PylonMFD::ButtonLabel (int bt) {
+    return this->serviceButtonLabel( bt );
+}
+
+int PylonMFD::ButtonMenu (const MFDBUTTONMENU **menu) const {
+    return this->serviceButtonMenu( menu );
 }
 
 bool PylonMFD::ConsumeButton (int bt, int event) {
-
-	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
-
-	switch (bt) {
-		case 0 : ConsumeKeyBuffered(OAPI_KEY_Q); break;
-		case 1 : ConsumeKeyBuffered(OAPI_KEY_A); break;
-		case 2 : ConsumeKeyBuffered(OAPI_KEY_C); break;
-		case 3 : ConsumeKeyBuffered(OAPI_KEY_R); break;
-		case 4 : ConsumeKeyBuffered(OAPI_KEY_D); break;
-		case 5 : ConsumeKeyBuffered(OAPI_KEY_Z); break;
-
-		case 6 : ConsumeKeyBuffered(OAPI_KEY_W); break;
-		case 7 : ConsumeKeyBuffered(OAPI_KEY_S); break;
-		case 8 : ConsumeKeyBuffered(OAPI_KEY_V); break;
-		case 9 : ConsumeKeyBuffered(OAPI_KEY_N); break;
-		case 10: ConsumeKeyBuffered(OAPI_KEY_B); break;
-		case 11: ConsumeKeyBuffered(OAPI_KEY_X); break;
-
-		default: return false;
-	}
-	return true;
+    return this->serviceConsumeButton( bt, event );
 }
 
-bool PylonMFD::ConsumeKeyBuffered(DWORD key)
-{
-	switch(key) {
-	case OAPI_KEY_Q:
-		debugString[0]=0;
-		selectPrevAttachment();
-		return true;
-	case OAPI_KEY_A:
-		debugString[0]=0;
-		selectNextAttachment();
-		return true;
-	case OAPI_KEY_W:
-		debugString[0]=0;
-		upLevel();
-		return true;
-	case OAPI_KEY_S:
-		debugString[0]=0;
-		downLevel();
-		return true;
-	case OAPI_KEY_Z:
-		selectPrevParam();
-		debugString[0]=0;
-		return true;
-	case OAPI_KEY_X:
-		selectNextParam();
-		debugString[0]=0;
-		return true;
-	case OAPI_KEY_C:
-		debugString[0]=0;
-		selectCurrentAttachment();
-		if (selectedAttachment==NULL) { sprintf(debugString,"[Create]: No attachment.");return true;}
-		if (focus->GetAttachmentStatus(selectedAttachment)!=NULL) { sprintf(debugString,"[Create]: Attachment in use.");return true;}
-
-		char s[NAME_SIZE];
-		sprintf(s, "%s", objectName, objnameIndex);
-		if (oapiGetVesselByName(s)!=NULL) {
-			int i = 1;
-			sprintf(s, "%s%d", objectName, i);
-			while (oapiGetVesselByName(s)!=NULL) {
-				i++;
-				sprintf(s, "%s%d", objectName, i);
-			}
-			sprintf(s, "%s%d:%s", objectName, i, className);
-			objnameIndex = strlen(objectName);
-		} else {
-			sprintf(s, "%s:%s", objectName, className);
-			objnameIndex = 0;
-		}
-
-		oapiOpenInputBox("[PylonMFD]: Enter ""name:class"" of new object:", cbCreateObject, s, 40, (void *)this);
-		return true;
-	case OAPI_KEY_R:
-		debugString[0]=0;
-		selectCurrentAttachment();
-		if (selectedAttachment==NULL) { sprintf(debugString,"[Release]: No attachment.");return true;}
-		if ((focus->GetAttachmentStatus(selectedAttachment)==NULL)) {sprintf(debugString,"[Release]: Attachment not in use.");return true;}
-		oapiOpenInputBox("[PylonMFD]: Enter release velocity:", cbReleaseObject, strvel, 40, (void *)this);
-		return true;
-	case OAPI_KEY_D:
-		debugString[0]=0;
-		selectCurrentAttachment();
-		if (selectedAttachment==NULL) { sprintf(debugString,"[Destroy]: No attachment.");return true;}
-		if (focus->GetAttachmentStatus(selectedAttachment)==NULL) { sprintf(debugString,"[Destroy]: Attachment not in use.");return true;}
-		oapiOpenInputBox("[PylonMFD]: Destroy object? (y/n)", cbDestroyObject, 0, 40, (void *)this);
-		return true;
-	case OAPI_KEY_T:
-		debugString[0]=0;
-		selectCurrentAttachment();
-		if (selectedAttachment==NULL) { sprintf(debugString,"[Attach]: No attachment.");return true;}
-		if (focus->GetAttachmentStatus(selectedAttachment)!=NULL) { sprintf(debugString,"[Attach]: Attachment in use.");return true;}
-		oapiOpenInputBox("[PylonMFD]: Enter name of object to attach:", cbAttachObject, 0, 40, (void *)this);
-		return true;
-	case OAPI_KEY_V:
-		debugString[0]=0;
-		if (!selectCurrentParameter()) { sprintf(debugString,"[Set value]: No parameter");return true;}
-
-		if (selSequence != -1) { sprintf(debugString,"[Value]: Select a parameter");return true;}
-
-		sprintf(s, "[PylonMFD]: Enter value for parameter %s (type %s)",pchild->GetParameterName(selectedParameter), PylonParamTypeName[pchild->GetParameterType(selectedParameter)]);
-
-		if (selSequence==-1)
-			oapiOpenInputBox(s, cbSetParam, 0, 40, (void *)this);
-		else
-			sprintf(debugString, "[Set value]: Select a parameter.");
-		return true;
-
-	case OAPI_KEY_B:
-		debugString[0]=0;
-		decParameter();
-		return true;
-	case OAPI_KEY_N:
-		debugString[0]=0;
-		incParameter();
-		return true;
-	case OAPI_KEY_F:
-		if (focusH==NULL) { sprintf(debugString,"[Change focus]: No object in focus.");return true;}
-		if (focusH!=oapiGetFocusObject()) oapiSetFocusObject(focusH);
-		return true;
-
-	default:
-		return false;
-	}
-
+bool PylonMFD::ConsumeKeyBuffered(DWORD key) {
+    return this->serviceConsumeKeyBuffered( key );
 }
 
-// ==============================================================
-// Save status to file
 void PylonMFD::WriteStatus(FILEHANDLE scn) const {
-	oapiWriteScenario_int (scn, "SHOWCOMMANDS", showCommands);
+    this->serviceWriteStatus( scn );
 }
 
-// ==============================================================
-// Save status to file
 void PylonMFD::ReadStatus(FILEHANDLE scn) {
-    char *line;
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp (line, "SHOWCOMMANDS", 12)) {
-			sscanf (line+12, "%d", &showCommands);
-			showCommands = showCommands? 1:0;
-		}
-	}
+    this->serviceReadStatus( scn );
 }
+
 
 // ==============================================================
 // Repaint the MFD
-
-/*
+//
+// New version using sketchpad
 bool PylonMFD::Update (oapi::Sketchpad *skp) {
 
 
     this->Title( skp, strings[0] );
-
-skp->SetFont( this->GetDefaultFont( 0 ) );
-skp->Text( 20, 20, "hola", 2 );
-return true;
-
 
     DWORD width = GetWidth();
     DWORD height = GetHeight();
@@ -368,13 +222,10 @@ return true;
     DWORD x = 2 * charWidth;
     DWORD y = lineHeight * 2;
 
-    #define print( msg ) { skp->Text( x, y, msg, strlen( msg ) ); y += lineHeight; }
+    #define print2( msg ) { skp->Text( x, y, msg, strlen( msg ) ); y += lineHeight; }
 
     // Debug is red
-    #define  PRINTDEBUG	{ skp->SetTextColor( this->GetDefaultColour( 3, 0 ) ); x = 2 * charWidth; y += lineHeight; print( debugString ) }
-
-	#define RESET_LINE line = lineHeight * 3
-
+    #define  PRINTDEBUG2	{ skp->SetTextColor( this->GetDefaultColour( 3, 0 ) ); x = 2 * charWidth; y += lineHeight; print2( debugString ) }
 
 
     // todo: aqui se asume que se tiene focus y focusH validos.
@@ -385,12 +236,12 @@ return true;
 	char s[NAME_SIZE], s2[NAME_SIZE];
 
 	if (focus == NULL || focusH == NULL) {
-		print( "No object in focus." );
+		print2( "No object in focus." );
 		focus = NULL;
 		focusH = NULL;
 		selectedAttachment = NULL;
 		selectedParameter = 0;
-		PRINTDEBUG;
+		PRINTDEBUG2;
 		return true;
 	}
 
@@ -411,27 +262,26 @@ return true;
 
 	oapiGetObjectName(focusH, s2, NAME_SIZE);
 	sprintf(s,"Vessel: %s", s2);
-	print( s );
+	print2( s );
 	if (p!=NULL) {
 		oapiGetObjectName(pH, s2, NAME_SIZE);
 		sprintf(s,"Parent: %s", s2);
-		print( s );
+		print2( s );
 	}
 
 	double mass=focus->GetEmptyMass();
 	sprintf(s,"Mass: %.0f", mass);
-	print( s );
+	print2( s );
 
 
 	// Sub-object management
-
 
 	// Print attachment info
 	n = focus->AttachmentCount(false);
 	if (n==0) {
 		selectedAttachment = NULL;
-		print( "No attachments in vessel." );
-		PRINTDEBUG;
+		print2( "No attachments in vessel." );
+		PRINTDEBUG2;
 		return true;
 	}
 	selectCurrentParameter();
@@ -439,22 +289,22 @@ return true;
 	if (selectedAttachment!=NULL) {
 		y += lineHeight;
 		sprintf(s,"Attachment %d of %d", selectedAttachmentIndex+1, n);
-		print( s );
+		print2( s );
 		if (childH == NULL) {
 			sprintf(s,"Id: %s (Status: Empty)", focus->GetAttachmentId(selectedAttachment));
-			print( s );
-			PRINTDEBUG;
+			print2( s );
+			PRINTDEBUG2;
 			return true;
 		}
 
 		sprintf(s,"Id: %s", focus->GetAttachmentId(selectedAttachment));
-		print( s );
+		print2( s );
 		sprintf(s,"Sub-vessel: %s",child->GetName());
-		print( s );
+		print2( s );
 
 	} else {
 		sprintf(s,"Class: %s",child->GetClassName());
-		print( s );
+		print2( s );
 	}
 	x += tabSize;
 	y += lineHeight;
@@ -463,7 +313,7 @@ return true;
     // Print child info
 
     if (pchild == NULL) {
-        PRINTDEBUG;
+        PRINTDEBUG2;
         return true;
     }
 
@@ -473,8 +323,8 @@ return true;
     int ns = pchild->GetSequenceCount();
 
     if (np+ns==0) {
-        print( "No user parameters or sequences." );
-        PRINTDEBUG;
+        print2( "No user parameters or sequences." );
+        PRINTDEBUG2;
         return true;
     }
 //**********************************************************************
@@ -504,33 +354,33 @@ return true;
         }
 
         sprintf(s,"Parameter %d of %d", upi+1, nup);
-        print( s );
+        print2( s );
 
         sprintf(s,"Name: %s", pchild->GetParameterName(selectedParameter));
-        print( s );
+        print2( s );
         sprintf(s,"Type: %s", PylonParamTypeName[selParamtype]);
-        print( s );
+        print2( s );
 
 
         // Parameter
         if (selParamtype < PYL_PARAM_INTEGER) {
             bool value = pchild->GetParamBol(selectedParameter);
             sprintf(s,"Value: %s", PylonBoolParamTypeName[selParamtype][value]);
-            print( s );
+            print2( s );
         } else if (selParamtype < PYL_PARAM_SCALAR) {
             int value = pchild->GetParamInt(selectedParameter);
             sprintf(s,"Value: %d", value);
-            print( s );
+            print2( s );
         } else if (selParamtype < PYL_PARAM_STRING) {
             double value = pchild->GetParamDbl(selectedParameter);
             sprintf(s,"Value: %f", value);
-            print( s );
+            print2( s );
         } else if (selParamtype < PYL_PARAM_NOT_DEFINED) {
             char *value = pchild->GetParamStr(selectedParameter);
             sprintf(s,"Value: %s", value);
-            print( s );
+            print2( s );
         } else {
-            PRINTDEBUG;
+            PRINTDEBUG2;
             return true;
         }
 
@@ -555,13 +405,13 @@ return true;
         }
 
         sprintf(s,"Sequence %d of %d", usi+1, nus);
-        print( s );
+        print2( s );
 
         if (selParamtype==PYL_PARAM_NOT_DEFINED)
             sprintf(s,"Name: %s", pchild->GetSequenceName(selSequence));
         else
             sprintf(s,"Name: %s (%s)", pchild->GetSequenceName(selSequence), PylonParamTypeName[selParamtype]);
-        print( s );
+        print2( s );
 
         if (!pchild->IsSequenceValid(selSequence))
             sprintf(s,"Not valid");
@@ -569,18 +419,21 @@ return true;
             sprintf(s,"Cancelling");
         else
             sprintf(s,"%s", &PylonBoolParamTypeName[PYL_PARAM_BOOLEAN_ACTIVATION][pchild->IsSequenceActive(selSequence)]);
-        print( s );
+        print2( s );
     }
 
 	// Print debug
-	PRINTDEBUG;
+	PRINTDEBUG2;
 
     return true;
 
 }
-*/
 
 
+// ==============================================================
+// Repaint the MFD
+//
+// Old version using hDC
 #define LINE 12
 #define TAB 10
 void print(HDC hDC, int i, int *j, LPCTSTR cad) {
@@ -588,7 +441,7 @@ void print(HDC hDC, int i, int *j, LPCTSTR cad) {
 }
 #define  PRINTDEBUG	line+=LINE;print(hDC, 10, &line, debugString)
 
-void PylonMFD::Update (HDC hDC)
+void PylonMFD2010::Update (HDC hDC)
 {
 	Title (hDC, strings[0]);
 
@@ -599,7 +452,7 @@ void PylonMFD::Update (HDC hDC)
 
 	int line = 20, tab = 2;
 	char s[NAME_SIZE], s2[NAME_SIZE];
-	#define RESET_LINE line = 32;
+	#define RESET_LINE { line = 32; }
 
 	if (focus == NULL || focusH == NULL) {
 		print(hDC, tab, &line, "No object in focus.");
@@ -787,28 +640,71 @@ void PylonMFD::Update (HDC hDC)
 
 
 // ==============================================================
-// MFD message parser
-int PylonMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
-{
-	switch (msg) {
-/*
-	case OAPI_MSG_MFD_OPENED:
-		// Our new MFD mode has been selected, so we create the MFD and
-		// return a pointer to it.
-		return (int)(new PylonMFD (LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam));
-*/
-        case OAPI_MSG_MFD_OPENEDEX:
-            MFDMODEOPENSPEC *ospec = (MFDMODEOPENSPEC*)wparam;
-            return (int)( new PylonMFD( ospec->w, ospec->h, (VESSEL*)lparam ) );
-	}
-	return 0;
-}
-
-
-// ==============================================================
 // Internal functionality
 
-int PylonMFD::selectCurrentAttachment(void) {
+PylonMFDInnerClass::PylonMFDInnerClass() {
+
+    selectedAttachmentIndex = selectedParameter = selParamtype = selSequence = 0;
+
+	showCommands = 0;
+
+	strvel[0]=0;
+	objnameIndex = 0;
+	*objectName=0;
+	className[0]=0;
+	debugString[0]=0;
+
+	initfocusH = oapiGetFocusObject();
+	if (initfocusH==NULL)
+		initfocus = NULL;
+	else
+		initfocus = oapiGetVesselInterface(initfocusH);
+	focusH = initfocusH;
+	focus = initfocus;
+
+	if ( focus == NULL ) {
+        selectedAttachment = NULL;
+        selectedParameter = -1; selSequence = -1;
+        return;
+	}
+
+	if ( focus->AttachmentCount( false ) > 0) {
+		selectedAttachment = focus->GetAttachmentHandle( false, 0 );
+	}
+	else {
+        selectedAttachment = NULL;
+	}
+
+	child = NULL;
+	childH = NULL;
+	pchild = NULL;
+	bool b = selectCurrentParameter();
+/*
+	if (b) {
+		int np = pchild->GetParameterCount(), ns = pchild->GetSequenceCount();
+		if (!pchild->userParametersEnabled || showCommands ) {
+			selectedParameter = np;
+			selSequence = 0;
+
+			if ( !pchild->IsUserSequence(selSequence) ) selectNextParam();
+		}
+		while (b) {
+			if (selectedParameter >= np) {
+				b = !pchild->IsUserSequence(selectedParameter - np);
+			} else {
+				b = !(pchild->userParametersEnabled && pchild->IsUserParameter(selectedParameter));
+			}
+			if (b) selectNextParam();
+			if (selectedParameter >= np + ns) {
+				selectedParameter = -1; selSequence = -1;
+			}
+		}
+	}
+*/
+
+}
+
+int PylonMFDInnerClass::selectCurrentAttachment(void) {
 
     if ( focus == NULL ) {
         return -1;
@@ -836,7 +732,7 @@ int PylonMFD::selectCurrentAttachment(void) {
 	}
 }
 
-void PylonMFD::selectPrevAttachment(void) {
+void PylonMFDInnerClass::selectPrevAttachment(void) {
 	int n = focus->AttachmentCount(false), i=n-1;
 	if (n==0) {
 		selectedAttachment = NULL;
@@ -858,7 +754,7 @@ void PylonMFD::selectPrevAttachment(void) {
 		selectedAttachment = focus->GetAttachmentHandle(false, i);
 	}
 }
-void PylonMFD::selectNextAttachment(void)  {
+void PylonMFDInnerClass::selectNextAttachment(void)  {
 	int n = focus->AttachmentCount(false), i=n-1;
 	if (n==0) {
 		selectedAttachment = NULL;
@@ -877,7 +773,7 @@ void PylonMFD::selectNextAttachment(void)  {
 		selectedAttachment = focus->GetAttachmentHandle(false, i);
 	}
 }
-void PylonMFD::selectPrevParam(void) {
+void PylonMFDInnerClass::selectPrevParam(void) {
 	selectCurrentAttachment();
 	if ( focus == NULL ) {
         return;
@@ -923,7 +819,7 @@ void PylonMFD::selectPrevParam(void) {
 	pchild->SetMFDSelectedParameter(selectedParameter);
 //sprintf(oapiDebugString(),"selPrev: np=%d,ns=%d,sp=%d,ss=%d",np,ns,selectedParameter+1, selSequence+1);
 }
-void PylonMFD::selectNextParam(void) {
+void PylonMFDInnerClass::selectNextParam(void) {
 	selectCurrentAttachment();
 	if ( focus == NULL ) {
         return;
@@ -971,7 +867,7 @@ void PylonMFD::selectNextParam(void) {
 //	sprintf(oapiDebugString(),"selPrev: np=%d,ns=%d,sp=%d,ss=%d",np,ns,selectedParameter+1, selSequence+1);
 }
 
-bool PylonMFD::selectCurrentParameter(void) {
+bool PylonMFDInnerClass::selectCurrentParameter(void) {
 	selectCurrentAttachment();
 	if ( focus == NULL ) {
         return false;
@@ -1006,7 +902,7 @@ bool PylonMFD::selectCurrentParameter(void) {
 	return true;
 }
 
-void PylonMFD::upLevel(void)
+void PylonMFDInnerClass::upLevel(void)
 {
 	int i=0,n = focus->AttachmentCount(true);
 	ATTACHMENTHANDLE a;
@@ -1038,7 +934,7 @@ void PylonMFD::upLevel(void)
 	selectCurrentAttachment();
 }
 
-void PylonMFD::downLevel(void)
+void PylonMFDInnerClass::downLevel(void)
 {
 	selectCurrentParameter();
 	if (selectedAttachment==NULL) return;
@@ -1051,7 +947,7 @@ void PylonMFD::downLevel(void)
 	selectCurrentAttachment();
 }
 
-void PylonMFD::decParameter(void)
+void PylonMFDInnerClass::decParameter(void)
 {
 	if (focusH == NULL) return;
 
@@ -1076,7 +972,7 @@ void PylonMFD::decParameter(void)
 	return;
 }
 
-void PylonMFD::incParameter(void)
+void PylonMFDInnerClass::incParameter(void)
 {
 	if (focusH == NULL) return;
 
@@ -1099,6 +995,201 @@ void PylonMFD::incParameter(void)
 
 	return;
 }
+
+
+// Return button labels
+char *PylonMFDInnerClass::serviceButtonLabel (int bt)
+{
+	// The labels for the buttons used by the MFD
+	static char *label[12] = {"AT-", "AT+", "CRT", "RLS", "DES", "P-", "UP", "DWN", "SET", "INC", "DEC", "P+"};
+	return (bt < 12 ? label[bt] : 0);
+}
+
+// Return button menus
+int PylonMFDInnerClass::serviceButtonMenu (const MFDBUTTONMENU **menu) const
+{
+	// The menu descriptions for the buttons
+	static const MFDBUTTONMENU mnu[12] = {
+	   //"1234567890123456"
+		{"<- Select prev.",
+		 "   attachment.", 'Q'},
+		{"<- Select next",
+		 "   attachment.", 'A'},
+		{"<- Create object",
+		 "   in attachment", 'C'},
+		{"<- Release",
+		 "   object.", 'R'},
+		{"<- Destroy",
+		 "   object.", 'D'},
+ 		{"<- Select prev.",
+		 "   pylon param.", 'Z'},
+
+		{" Go up in the ->",
+		 "    structure.", 'W'},
+		{"   Go down in ->",
+		 "the structure.", 'S'},
+		{"Set parameter ->",
+		 "       value. ", 'V'},
+		{"    Increment ->",
+		 " param. value.", 'N'},
+		{"    Decrement ->",
+		 " param. value.", 'B'},
+ 		{"  Select next ->",
+		 "  pylon param.", 'X'},
+
+	};
+	if (menu) *menu = mnu;
+	return 12; // return the number of buttons used
+}
+
+bool PylonMFDInnerClass::serviceConsumeButton (int bt, int event) {
+
+	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
+
+	switch (bt) {
+		case 0 : this->serviceConsumeKeyBuffered(OAPI_KEY_Q); break;
+		case 1 : this->serviceConsumeKeyBuffered(OAPI_KEY_A); break;
+		case 2 : this->serviceConsumeKeyBuffered(OAPI_KEY_C); break;
+		case 3 : this->serviceConsumeKeyBuffered(OAPI_KEY_R); break;
+		case 4 : this->serviceConsumeKeyBuffered(OAPI_KEY_D); break;
+		case 5 : this->serviceConsumeKeyBuffered(OAPI_KEY_Z); break;
+
+		case 6 : this->serviceConsumeKeyBuffered(OAPI_KEY_W); break;
+		case 7 : this->serviceConsumeKeyBuffered(OAPI_KEY_S); break;
+		case 8 : this->serviceConsumeKeyBuffered(OAPI_KEY_V); break;
+		case 9 : this->serviceConsumeKeyBuffered(OAPI_KEY_N); break;
+		case 10: this->serviceConsumeKeyBuffered(OAPI_KEY_B); break;
+		case 11: this->serviceConsumeKeyBuffered(OAPI_KEY_X); break;
+
+		default: return false;
+	}
+	return true;
+}
+
+bool PylonMFDInnerClass::serviceConsumeKeyBuffered(DWORD key)
+{
+	switch(key) {
+	case OAPI_KEY_Q:
+		debugString[0]=0;
+		selectPrevAttachment();
+		return true;
+	case OAPI_KEY_A:
+		debugString[0]=0;
+		selectNextAttachment();
+		return true;
+	case OAPI_KEY_W:
+		debugString[0]=0;
+		upLevel();
+		return true;
+	case OAPI_KEY_S:
+		debugString[0]=0;
+		downLevel();
+		return true;
+	case OAPI_KEY_Z:
+		selectPrevParam();
+		debugString[0]=0;
+		return true;
+	case OAPI_KEY_X:
+		selectNextParam();
+		debugString[0]=0;
+		return true;
+	case OAPI_KEY_C:
+		debugString[0]=0;
+		selectCurrentAttachment();
+		if (selectedAttachment==NULL) { sprintf(debugString,"[Create]: No attachment.");return true;}
+		if (focus->GetAttachmentStatus(selectedAttachment)!=NULL) { sprintf(debugString,"[Create]: Attachment in use.");return true;}
+
+		char s[NAME_SIZE];
+		sprintf(s, "%s", objectName, objnameIndex);
+		if (oapiGetVesselByName(s)!=NULL) {
+			int i = 1;
+			sprintf(s, "%s%d", objectName, i);
+			while (oapiGetVesselByName(s)!=NULL) {
+				i++;
+				sprintf(s, "%s%d", objectName, i);
+			}
+			sprintf(s, "%s%d:%s", objectName, i, className);
+			objnameIndex = strlen(objectName);
+		} else {
+			sprintf(s, "%s:%s", objectName, className);
+			objnameIndex = 0;
+		}
+
+		oapiOpenInputBox("[PylonMFD]: Enter ""name:class"" of new object:", cbCreateObject, s, 40, (void *)this);
+		return true;
+	case OAPI_KEY_R:
+		debugString[0]=0;
+		selectCurrentAttachment();
+		if (selectedAttachment==NULL) { sprintf(debugString,"[Release]: No attachment.");return true;}
+		if ((focus->GetAttachmentStatus(selectedAttachment)==NULL)) {sprintf(debugString,"[Release]: Attachment not in use.");return true;}
+		oapiOpenInputBox("[PylonMFD]: Enter release velocity:", cbReleaseObject, strvel, 40, (void *)this);
+		return true;
+	case OAPI_KEY_D:
+		debugString[0]=0;
+		selectCurrentAttachment();
+		if (selectedAttachment==NULL) { sprintf(debugString,"[Destroy]: No attachment.");return true;}
+		if (focus->GetAttachmentStatus(selectedAttachment)==NULL) { sprintf(debugString,"[Destroy]: Attachment not in use.");return true;}
+		oapiOpenInputBox("[PylonMFD]: Destroy object? (y/n)", cbDestroyObject, 0, 40, (void *)this);
+		return true;
+	case OAPI_KEY_T:
+		debugString[0]=0;
+		selectCurrentAttachment();
+		if (selectedAttachment==NULL) { sprintf(debugString,"[Attach]: No attachment.");return true;}
+		if (focus->GetAttachmentStatus(selectedAttachment)!=NULL) { sprintf(debugString,"[Attach]: Attachment in use.");return true;}
+		oapiOpenInputBox("[PylonMFD]: Enter name of object to attach:", cbAttachObject, 0, 40, (void *)this);
+		return true;
+	case OAPI_KEY_V:
+		debugString[0]=0;
+		if (!selectCurrentParameter()) { sprintf(debugString,"[Set value]: No parameter");return true;}
+
+		if (selSequence != -1) { sprintf(debugString,"[Value]: Select a parameter");return true;}
+
+		sprintf(s, "[PylonMFD]: Enter value for parameter %s (type %s)",pchild->GetParameterName(selectedParameter), PylonParamTypeName[pchild->GetParameterType(selectedParameter)]);
+
+		if (selSequence==-1)
+			oapiOpenInputBox(s, cbSetParam, 0, 40, (void *)this);
+		else
+			sprintf(debugString, "[Set value]: Select a parameter.");
+		return true;
+
+	case OAPI_KEY_B:
+		debugString[0]=0;
+		decParameter();
+		return true;
+	case OAPI_KEY_N:
+		debugString[0]=0;
+		incParameter();
+		return true;
+	case OAPI_KEY_F:
+		if (focusH==NULL) { sprintf(debugString,"[Change focus]: No object in focus.");return true;}
+		if (focusH!=oapiGetFocusObject()) oapiSetFocusObject(focusH);
+		return true;
+
+	default:
+		return false;
+	}
+
+}
+
+// ==============================================================
+// Save status to file
+void PylonMFDInnerClass::serviceWriteStatus(FILEHANDLE scn) const {
+	oapiWriteScenario_int (scn, "SHOWCOMMANDS", showCommands);
+}
+
+// ==============================================================
+// Save status to file
+void PylonMFDInnerClass::serviceReadStatus(FILEHANDLE scn) {
+    char *line;
+	while (oapiReadScenario_nextline (scn, line)) {
+		if (!strnicmp (line, "SHOWCOMMANDS", 12)) {
+			sscanf (line+12, "%d", &showCommands);
+			showCommands = showCommands? 1:0;
+		}
+	}
+}
+
+
 
 // ==============================================================
 // Input Boxes Callback functions
