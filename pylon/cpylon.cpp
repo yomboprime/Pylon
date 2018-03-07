@@ -303,7 +303,8 @@ int CPylon::clbkConsumeBufferedKey ( DWORD key, bool down, char *kstate ) {
 	}
 
 	if ( this->redirectKeysVesselHandle != NULL &&
-            key != OAPI_KEY_H ) {
+            key != OAPI_KEY_H &&
+            ( key < OAPI_KEY_1 || key > OAPI_KEY_0 ) ) {
 
         VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
         if ( v != NULL ) {
