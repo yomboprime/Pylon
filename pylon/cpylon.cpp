@@ -289,12 +289,14 @@ int CPylon::clbkConsumeBufferedKey ( DWORD key, bool down, char *kstate ) {
         return 1;
 	}
 
-	if ( this->redirectKeysVesselHandle != NULL ) {
+	if ( this->redirectKeysVesselHandle != NULL &&
+            key != OAPI_KEY_H ) {
 
         VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
         if ( v != NULL ) {
 
             return v->SendBufferedKey( key, down, kstate );
+
         }
 	}
 
@@ -371,8 +373,6 @@ void CPylon::clbkNavMode (int mode, bool active) {
         return;
     }
 
-    _snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"NAVMODE change: %d, %d", mode, active ? 1 : 0 );
-
     VESSEL *v = oapiGetVesselInterface( this->redirectKeysVesselHandle );
     if ( v == NULL ) {
         return;
@@ -391,9 +391,6 @@ void CPylon::clbkPostCreation (void)
 {
 
 	orbiterSoundId = ConnectToOrbiterSoundDLL(GetHandle());
-
-	//kk
-	//this->initializePylon();
 
 }
 
