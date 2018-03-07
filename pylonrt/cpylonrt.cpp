@@ -63,6 +63,10 @@ CPylonRT::~CPylonRT ()
 void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 {
 
+	if ( this->IsFirstFrame() ) {
+	    this->initializePylon();
+	}
+
 	this->attToParent = CPylon::GetParentAttachment( this );
 
     if ( this->attToParent == NULL) {

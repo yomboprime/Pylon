@@ -65,6 +65,8 @@ public:
 	// Pylon API
 	// ==============================================================
 
+	void initializePylon(void);
+
 	// Pylon paramaters management. Every CPylon subclass must override these functions
 
 	virtual int GetParameterCount(void);
@@ -184,7 +186,7 @@ private:
 	// Name of that vessel
 	char redirectKeysVesselName[ NAME_SIZE ];
 
-	void initializePylon(void);
+
 	void SelectSequence(int i);
 
     static bool AttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);

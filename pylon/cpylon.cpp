@@ -1062,6 +1062,10 @@ void CPylon::SetMFDSelectedParameter(int selectedParameter)
 
 void CPylon::initializePylon() {
 
+    if ( this->inited ) {
+        return;
+    }
+
     // Add child masses to root vessel
     CPylon::addAttachedMasses( this, true );
 

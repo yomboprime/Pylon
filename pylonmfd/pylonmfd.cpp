@@ -47,10 +47,10 @@ DLLCLBK void ExitModule (HINSTANCE hDLL) {
 
 // Constructor
 PylonMFD::PylonMFD ( DWORD w, DWORD h, VESSEL *vessel)
-: MFD2 (w, h, vessel)
+: MFD (w, h, vessel)
 {
 
-    brush1 = oapiCreateBrush( this->GetDefaultColour( 1, 1 ) );
+    //brush1 = oapiCreateBrush( this->GetDefaultColour( 1, 1 ) );
 
     selectedAttachmentIndex = selectedParameter = selParamtype = selSequence = 0;
 
@@ -114,7 +114,7 @@ PylonMFD::PylonMFD ( DWORD w, DWORD h, VESSEL *vessel)
 // Destructor
 PylonMFD::~PylonMFD()
 {
-	oapiReleaseBrush( brush1 );
+	//oapiReleaseBrush( brush1 );
 }
 
 // ==============================================================
@@ -324,30 +324,33 @@ void PylonMFD::ReadStatus(FILEHANDLE scn) {
 // ==============================================================
 // Repaint the MFD
 
-
+/*
 bool PylonMFD::Update (oapi::Sketchpad *skp) {
 
 
     this->Title( skp, strings[0] );
 
+skp->SetFont( this->GetDefaultFont( 0 ) );
+skp->Text( 20, 20, "hola", 2 );
+return true;
+
+
     DWORD width = GetWidth();
     DWORD height = GetHeight();
 
-    /*
-    skp->SetPen( this->GetDefaultPen( 0, 0, 1 ) );
-    skp->Rectangle( 100, 100, 150, 150 );
+    //skp->SetPen( this->GetDefaultPen( 0, 0, 1 ) );
+    //skp->Rectangle( 100, 100, 150, 150 );
 
-    oapi::IVECTOR2 points[3];
-    points[0].x = 200;
-    points[0].y = 200;
-    points[1].x = 300;
-    points[1].y = 256;
-    points[2].x = 220;
-    points[2].y = 340;
-    skp->SetPen( NULL );
-    skp->SetBrush( this->brush1 );
-    skp->Polygon( points, 3 );
-    */
+    //oapi::IVECTOR2 points[3];
+    //points[0].x = 200;
+    //points[0].y = 200;
+    //points[1].x = 300;
+    //points[1].y = 256;
+    //points[2].x = 220;
+    //points[2].y = 340;
+    //skp->SetPen( NULL );
+    //skp->SetBrush( this->brush1 );
+    //skp->Polygon( points, 3 );
 
     DWORD cSize = skp->GetCharSize();
     int lineHeight = cSize & 0x0FFFF;
@@ -359,6 +362,7 @@ bool PylonMFD::Update (oapi::Sketchpad *skp) {
     // Default color is white
     skp->SetTextColor( this->GetDefaultColour( 2, 0 ) );
     skp->SetFont( this->GetDefaultFont( 0 ) );
+    skp->SetPen( this->GetDefaultPen( 2, 0, 1 ) );
     skp->SetBrush( NULL );
 
     DWORD x = 2 * charWidth;
@@ -391,7 +395,6 @@ bool PylonMFD::Update (oapi::Sketchpad *skp) {
 	}
 
 	// Print the parent and actual vessel.
-
 	int i=0,n = focus->AttachmentCount(true);
 	ATTACHMENTHANDLE attachH;
 	OBJHANDLE pH = NULL;
@@ -575,9 +578,9 @@ bool PylonMFD::Update (oapi::Sketchpad *skp) {
     return true;
 
 }
+*/
 
 
-/*
 #define LINE 12
 #define TAB 10
 void print(HDC hDC, int i, int *j, LPCTSTR cad) {
@@ -781,7 +784,6 @@ void PylonMFD::Update (HDC hDC)
 	// Print debug
 	PRINTDEBUG;
 }
-*/
 
 
 // ==============================================================

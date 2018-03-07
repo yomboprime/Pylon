@@ -15,7 +15,7 @@
 
 #include "CPylon.h"
 
-class PylonMFD: public MFD2 {
+class PylonMFD: public MFD {
 public:
 
 	PylonMFD (DWORD w, DWORD h, VESSEL *vessel);
@@ -26,8 +26,8 @@ public:
 	bool ConsumeKeyBuffered(DWORD key);
 	void WriteStatus(FILEHANDLE scn) const;
 	void ReadStatus(FILEHANDLE scn);
-	//void Update (HDC hDC);
-	virtual bool Update (oapi::Sketchpad *skp);
+	void Update (HDC hDC);
+	//virtual bool Update (oapi::Sketchpad *skp);
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 	char debugString[NAME_SIZE];
@@ -42,7 +42,7 @@ public:
 	TPylParamValue tempValue;
 	int showCommands;
 
-	oapi::Brush *brush1;
+	//oapi::Brush *brush1;
 
 	char objectName[NAME_SIZE];
 	char className[NAME_SIZE];
