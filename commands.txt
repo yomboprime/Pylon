@@ -237,7 +237,7 @@ Example:
     ATTACH_DISTANCE "SH-01" 0 1 "someVessel" 1.5
 
 ----------------------------
-Command: RELEASE vessel velocity
+Command: RELEASE vessel velocity   *** This command doesn't work at the moment. Please use RELEASE_ATT instead
 Description: Release an attached vessel with a initial speed. If it is a pylon and was rotating, the angular velocity is maintained. No angular momentum calcs are performed, but linear momentum is conserved.
 Duration: Instant
 Parameters:

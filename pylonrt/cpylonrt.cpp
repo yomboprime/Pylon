@@ -252,10 +252,6 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 
 bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
 
-    if ( ! CPylon::PylonDetachInternal( parent, child, parent_attachment, vel ) ) {
-        return false;
-    }
-
   	VESSEL *p = oapiGetVesselInterface( parent );
     VESSEL *c = oapiGetVesselInterface( child );
 
@@ -263,12 +259,19 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
 	    return true;
     }
 
-	CPylon *pp = CPylon::IsPylonVessel( p );
+    ATTACHMENTHANDLE child_attachment = CPylon::GetParentAttachment( c );
+
+    if ( ! CPylon::PylonDetachInternal( parent, child, parent_attachment, 0.0 ) || child_attachment == NULL ) {
+        return false;
+    }
+
 	CPylon *pc = CPylon::IsPylonVessel( c );
 
-	if ( pp == NULL || pc == NULL) {
+	if ( pc == NULL) {
         return true;
     }
+
+    CPylonRT *prt = (CPylonRT *)pc;
 
 	double invdt = oapiGetSimStep();
 
@@ -276,16 +279,14 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
 	    return true;
 	}
 
+	invdt = 1 / invdt;
 	double cmass = c->GetMass();
-
-
-    invdt = 1 / invdt;
-
-    CPylonRT *prt = (CPylonRT *)pc;
 
     //if ( prt == NULL ) {
     //    prt = (CPylonRT *)pp;
     //}
+
+    VECTOR3 dir;
 
     if ( prt->rotAxis != PYL_RT_NO_ROTATION ) {
 
@@ -297,13 +298,21 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
         status.dockinfo = NULL;
         c->GetStatusEx( &status );
 
-        VECTOR3 localAngVel;
         switch ( prt->rotAxis ) {
-        case PYL_RT_ROTATION_X: localAngVel = _V(prt->angVel,0,0); break;
-        case PYL_RT_ROTATION_Y: localAngVel = _V(0,prt->angVel,0); break;
+        case PYL_RT_ROTATION_X:
+            dir = _V(1,0,0);
+            break;
+        case PYL_RT_ROTATION_Y:
+            dir = _V(0,prt->angVel,0);
+            break;
         case PYL_RT_NO_ROTATION:
-        case PYL_RT_ROTATION_Z: localAngVel = _V(0,0,prt->angVel); break;
+        case PYL_RT_ROTATION_Z:
+            dir = _V(0,0,prt->angVel);
+            break;
         }
+
+        VECTOR3 localAngVel = dir * prt->angVel;
+
         if ( prt != c ) {
             VECTOR3 globalAngVel;
             prt->GlobalRot( localAngVel, globalAngVel );
@@ -327,25 +336,36 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
         c->AddForce( prt->unitTrasl * ( prt->linVel * ( /*cmass*//*TODO ?? * */ invdt ) ), _V(0,0,0));
     }
 
-    if ( vel!=0 ) {
+    if ( vel != 0 ) {
 
-        VESSEL *r = NULL;
-        if ( pp!=NULL ) {
-            r = GetRoot( pp );
-        }
+        VESSEL *r = GetRoot( p );
+
         if ( r != NULL ) {
-            VECTOR3 dir, pos, tempv, force;
 
-            p->GetAttachmentParams( parent_attachment, pos, dir, tempv );
+            VECTOR3 dirR, dirC, posR, posC, tempv1, forceR, forceC;
+
+            p->GetAttachmentParams( parent_attachment, posR, dirR, tempv1 );
+            c->GetAttachmentParams( child_attachment, posC, dirC, tempv1 );
+
+            if ( prt->rotAxis != PYL_RT_NO_ROTATION ) {
+                dirC = dir;
+            }
 
             if ( p != r ) {
-                p->/*GlobalRot-1*/Local2Global( dir, tempv );
-                r->Global2Local( tempv, dir );
-                p->Local2Global( pos, tempv );
-                r->Global2Local( tempv, pos );
+                p->/*GlobalRot-1*/Local2Global( dirR, tempv1 );
+                r->Global2Local( tempv1, dirR );
+                p->Local2Global( posR, tempv1 );
+                r->Global2Local( tempv1, posR );
             }
-            force = dir * ( -vel * cmass * invdt );
-            r->AddForce( force, pos );
+
+            double impulse = vel * cmass * invdt;
+
+            forceC = dirC * impulse;
+            forceR = dirR * impulse;
+
+            c->AddForce( forceC, posC );
+            r->AddForce( forceR, posR );
+
         }
     }
 

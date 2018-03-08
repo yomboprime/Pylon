@@ -464,7 +464,7 @@ bool PylonSequence::Execute(void) {
 
 
 			OBJHANDLE objH, obj2H;
-			ATTACHMENTHANDLE attH;
+			ATTACHMENTHANDLE attH, attH2;
 			VESSELSTATUS2 status;
 
 			bool lShift, rShift, lCtrl, rCtrl, lAlt, rAlt, modifiers;
@@ -755,6 +755,7 @@ bool PylonSequence::Execute(void) {
 					RELEASE vessel vel
 				*/
 				case PYL_CMD_RELEASE:
+
 					activate = false;
 					ves = (VESSEL*)(value.tempRef);
 					n = ves->AttachmentCount(true);
@@ -765,22 +766,26 @@ bool PylonSequence::Execute(void) {
 						obj2H = ves->GetAttachmentStatus(attH);
 						i++;
 					}
-					if (i>=n) return true;
+					if ( obj2H == NULL ) return true;
+
 					ves2 = oapiGetVesselInterface(obj2H);
+
 					n = ves2->AttachmentCount(false);
 					i=0; objH = NULL;
 					while (i<n && objH == NULL) {
-						attH = ves2->GetAttachmentHandle(false, i);
-						objH = ves2->GetAttachmentStatus(attH);
+						attH2 = ves2->GetAttachmentHandle(false, i);
+						objH = ves2->GetAttachmentStatus(attH2);
 						if (objH!=NULL) {
 							if (ves->GetHandle() != objH) objH = NULL;
 							else break;
 						}
 						i++;
 					}
-					if (i>=n) return true;
-//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "RELEASE1: vel=%f",nextCmd->value.dblValue);
-					CPylon::PylonDetach(obj2H, objH, attH, nextCmd->value.dblValue);
+					if ( objH == NULL ) return true;
+
+					// This does CTD in the call to orbiter detach.
+					//CPylon::PylonDetach(obj2H, objH, attH, nextCmd->value.dblValue);
+
 					return true;
 				/*
 					RELEASE_ATT parent_vessel att vel
