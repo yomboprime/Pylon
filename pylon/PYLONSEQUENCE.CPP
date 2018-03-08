@@ -799,8 +799,6 @@ bool PylonSequence::Execute(void) {
 					CPylon::PylonDetach(ves->GetHandle(), objH, attH, nextCmd->nextCmd->value.dblValue);
 					return true;
 
-				case PYL_CMD_CREATE: return true;
-					//class name x y z alfa beta gamma [ref](object ref for pos, if "", xyz are global)
 				/*
 					CREATE_ATTACHED name(parent) int(tochild) int(toparent) name(child) classname(child)
 				*/
@@ -904,17 +902,16 @@ bool PylonSequence::Execute(void) {
 					return true;
 
 				/*
-					TRANSFER_FUEL srcvessel sourcetank destvessel desttank fuelmass rate
+					TRANSFER_FUEL srcvessel sourcetank destvessel desttank fuelmass
 				*/
 				case PYL_CMD_TRANSFER_FUEL:
 					ves = (VESSEL*)(value.tempRef);
 					dw = nextCmd->value.intValue;
 					ves2 = (VESSEL*)(nextCmd->nextCmd->value.tempRef);
 					dw2 = nextCmd->nextCmd->nextCmd->value.intValue;
-_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL (t=%f): %s:%d -> %s:%d", oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2);
+                    //_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL (t=%f): %s:%d -> %s:%d", oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2);
 
-					if ( activate)
-					{
+					if ( activate) {
 						value.tempDbl = nextCmd->nextCmd->nextCmd->nextCmd->value.dblValue;
 						activate = false;
 					}
@@ -923,13 +920,11 @@ _snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL (t=%f): %s:%
 					if ( dw2 < 0 || dw2 >= ves2->GetPropellantCount() ) return true;
 
 					d = value.tempDbl;
-/*					d = nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->value.dblValue * oapiGetSimStep();
+					//d = nextCmd->nextCmd->nextCmd->nextCmd->nextCmd->value.dblValue * oapiGetSimStep();
+					//if ( value.tempDbl < d ) {
+					//  d = value.tempDbl;
+					//}
 
-					if ( value.tempDbl < d )
-					{
-						d = value.tempDbl;
-					}
-*/
 					propH = ves->GetPropellantHandleByIndex(dw);
 					d2 = ves->GetPropellantMass(propH);
 					if ( d2 < d )
@@ -938,10 +933,11 @@ _snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL (t=%f): %s:%
 					}
 					value.tempDbl -= d;
 					ves->SetPropellantMass(propH, d2 - d);
-
+/* commented 2018
 _snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL8 (t=%f): %s:%d -> %s:%d, cant=%f, d=%f, ves1F=%f",
 oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2,
 value.tempDbl, d, ves->GetPropellantMass(propH));
+*/
 
 					propH = ves->GetPropellantHandleByIndex(dw2);
 					ves2->SetPropellantMass(propH, ves2->GetPropellantMass(propH) + d);
@@ -1332,20 +1328,17 @@ value.tempDbl, d, ves->GetPropellantMass(propH));
 				*/
 				case PYL_CMD_SET_CAMERA_FOV:
 					if ( oapiGetSimStep() <= 0 ) return true;
-					d = (PI/360.) * nextCmd->value.dblValue * oapiGetSimStep();
+					d = RAD * nextCmd->value.dblValue * oapiGetSimStep();
 
 					d2 = oapiCameraAperture();
-					d3 = (PI/360.) * value.dblValue;
+					d3 = RAD * value.dblValue;
 					if ( d2 - d3 == 0 ) return true;
 
-					if ( d2 < d3 )
-					{
+					if ( d2 < d3 ) {
 						d = d2 + d;
 						if ( d > d3 ) d = d3;
 					}
-					else
-					if ( d2 > d3 )
-					{
+					else {
 						d = d2 - d;
 						if ( d < d3 ) d = d3;
 					}
