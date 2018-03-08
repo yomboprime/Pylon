@@ -1342,7 +1342,7 @@ bool PylonSequence::Execute(void) {
 					d = RAD * nextCmd->value.dblValue * oapiGetSimStep();
 
 					d2 = oapiCameraAperture();
-					d3 = RAD * value.dblValue;
+					d3 = 0.5 * RAD * value.dblValue;
 					if ( d2 - d3 == 0 ) return true;
 
 					if ( d2 < d3 ) {
