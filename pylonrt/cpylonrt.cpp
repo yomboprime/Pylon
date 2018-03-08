@@ -265,26 +265,28 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
         return false;
     }
 
-	CPylon *pc = CPylon::IsPylonVessel( c );
+	CPylon *pylon = CPylon::IsPylonVessel( p );
+	if ( pylon == NULL) {
 
-	if ( pc == NULL) {
-        return true;
+        pylon = CPylon::IsPylonVessel( c );
+
+        if ( pylon == NULL) {
+            return true;
+        }
+
     }
 
-    CPylonRT *prt = (CPylonRT *)pc;
+    //!!!
+    CPylonRT *prt = (CPylonRT *)pylon;
 
 	double invdt = oapiGetSimStep();
-
 	if ( invdt == 0 ) {
 	    return true;
 	}
 
 	invdt = 1 / invdt;
-	double cmass = c->GetMass();
 
-    //if ( prt == NULL ) {
-    //    prt = (CPylonRT *)pp;
-    //}
+	double cmass = c->GetMass();
 
     VECTOR3 dir;
 
@@ -303,29 +305,29 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
             dir = _V(1,0,0);
             break;
         case PYL_RT_ROTATION_Y:
-            dir = _V(0,prt->angVel,0);
+            dir = _V(0,1,0);
             break;
         case PYL_RT_NO_ROTATION:
         case PYL_RT_ROTATION_Z:
-            dir = _V(0,0,prt->angVel);
+            dir = _V(0,0,1);
             break;
         }
 
-        VECTOR3 localAngVel = dir * prt->angVel;
-
         if ( prt != c ) {
-            VECTOR3 globalAngVel;
-            prt->GlobalRot( localAngVel, globalAngVel );
+            VECTOR3 globalDir;
+            prt->GlobalRot( dir, globalDir );
 
             VECTOR3 oX, oY, oZ;
             c->GlobalRot(_V(1,0,0), oX);
             c->GlobalRot(_V(0,1,0), oY);
             c->GlobalRot(_V(0,0,1), oZ);
 
-            localAngVel = _V( dotp( globalAngVel, oX ),
-                              dotp( globalAngVel, oY ),
-                              dotp( globalAngVel, oZ ) );
+            dir = _V( dotp( globalDir, oX ),
+                              dotp( globalDir, oY ),
+                              dotp( globalDir, oZ ) );
         }
+
+        VECTOR3 localAngVel = dir * prt->angVel;
 
         status.vrot = localAngVel;
         c->DefSetStateEx(&status);
@@ -333,7 +335,25 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
     }
 
     if ( prt->hasTraslation ) {
-        c->AddForce( prt->unitTrasl * ( prt->linVel * ( /*cmass*//*TODO ?? * */ invdt ) ), _V(0,0,0));
+
+        VECTOR3 linTraslDir = prt->unitTrasl;
+
+        if ( prt != c ) {
+            VECTOR3 globalLinTraslDir;
+            prt->GlobalRot( linTraslDir, globalLinTraslDir );
+
+            VECTOR3 oX, oY, oZ;
+            c->GlobalRot(_V(1,0,0), oX);
+            c->GlobalRot(_V(0,1,0), oY);
+            c->GlobalRot(_V(0,0,1), oZ);
+
+            linTraslDir = _V( dotp( globalLinTraslDir, oX ),
+                              dotp( globalLinTraslDir, oY ),
+                              dotp( globalLinTraslDir, oZ ) );
+        }
+
+        c->AddForce( linTraslDir * ( prt->linVel * cmass * invdt ), _V(0,0,0));
+
     }
 
     if ( vel != 0 ) {
