@@ -429,7 +429,7 @@ bool PylonSequence::Execute(void) {
 			if (cmdcode  < 0 || cmdcode >= PYL_CMD_NOT_DEFINED) valid = false;
 			if (!valid) return true;
 
-			VESSEL *ves, *ves2;
+			VESSEL *ves, *ves2, *ves3;
 			CPylon *p;
 			char strTemp[NAME_SIZE];
 			char *c;
@@ -938,19 +938,25 @@ bool PylonSequence::Execute(void) {
 					}
 					value.tempDbl -= d;
 					ves->SetPropellantMass(propH, d2 - d);
-/* commented 2018
-_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL8 (t=%f): %s:%d -> %s:%d, cant=%f, d=%f, ves1F=%f",
-oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2,
-value.tempDbl, d, ves->GetPropellantMass(propH));
-*/
 
 					propH = ves->GetPropellantHandleByIndex(dw2);
 					ves2->SetPropellantMass(propH, ves2->GetPropellantMass(propH) + d);
-//_snprintf_s(oapiDebugString(), NAME_SIZE, NAME_SIZE, "TRANSFER_FUEL9 (t=%f): %s:%d -> %s:%d, cant=%f, d=%f, ves2F=%f",
-//oapiGetSimTime(), ves->GetName(), dw, ves2->GetName(), dw2,
-//value.tempDbl, d, ves2->GetPropellantMass(propH));
 
-//					if ( value.tempDbl > 0.0 ) return false;
+					ves3 = CPylon::GetRoot( ves );
+					if ( ves3 == CPylon::GetRoot( ves2 ) ) {
+
+                        if ( ves3 == ves ) {
+                            // Source == root
+                            ves3->SetEmptyMass( ves3->GetEmptyMass() + d );
+                        }
+
+                        if ( ves3 == ves2 ) {
+                            // Dest == root
+                            ves3->SetEmptyMass( ves3->GetEmptyMass() - d );
+                        }
+
+					}
+
 					return true;
 
 				/*
