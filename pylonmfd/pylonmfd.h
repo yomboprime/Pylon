@@ -1,8 +1,8 @@
 // ==============================================================
 //                 ORBITER MODULE: PylonMFD
 //
-//              Copyright (C) 2004 J.J. Luna
-//                   All rights reserved
+//              Copyright (C) 2004-2018 J.J. Luna
+//                      MIT Licensed
 //
 // PylonMFD.h
 //

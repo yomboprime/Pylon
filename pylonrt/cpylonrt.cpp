@@ -364,24 +364,21 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
 
             VECTOR3 dirR, dirC, posR, posC, tempv1, forceR, forceC;
 
-            p->GetAttachmentParams( parent_attachment, posR, dirR, tempv1 );
             c->GetAttachmentParams( child_attachment, posC, dirC, tempv1 );
 
             if ( prt->rotAxis != PYL_RT_NO_ROTATION ) {
                 dirC = dir;
             }
 
-            if ( p != r ) {
-                p->/*GlobalRot-1*/Local2Global( dirR, tempv1 );
-                r->Global2Local( tempv1, dirR );
-                p->Local2Global( posR, tempv1 );
-                r->Global2Local( tempv1, posR );
-            }
+            c->Local2Global( dirC, tempv1 );
+            r->Global2Local( tempv1, dirR );
+            c->Local2Global( posC, tempv1 );
+            r->Global2Local( tempv1, posR );
 
             double impulse = vel * cmass * invdt;
 
             forceC = dirC * impulse;
-            forceR = dirR * impulse;
+            forceR = - dirR * impulse;
 
             c->AddForce( forceC, posC );
             r->AddForce( forceR, posR );
