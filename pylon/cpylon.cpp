@@ -963,7 +963,6 @@ bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
 	if ( c == NULL ) {
         return false;
 	}
-
 	CPylon *pc = IsPylonVessel( c );
 
 	if ( pc != NULL ) {
@@ -971,8 +970,22 @@ bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
         return pc->PylonDetachInternal( parent, child, parent_attachment, vel );
 	}
 	else {
-	    // Generic version
-        return CPylon::DetachInternal( parent, child, parent_attachment, vel );
+
+        VESSEL *p = oapiGetVesselInterface( parent );
+
+        if ( p == NULL ) {
+            return false;
+        }
+        CPylon *pp = IsPylonVessel( p );
+
+        if ( pp != NULL ) {
+            // Virtual version
+            return pp->PylonDetachInternal( parent, child, parent_attachment, vel );
+        }
+        else {
+            // Generic version
+            return CPylon::DetachInternal( parent, child, parent_attachment, vel );
+        }
 	}
 
 }
