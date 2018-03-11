@@ -331,6 +331,8 @@ bool PylonMFD::Update( oapi::Sketchpad *skp ) {
 //**********************************************************************
 
     selectedParameter = pchild->GetMFDSelectedParameter();
+    //if ( selectedParameter < 0 ) selectedParameter = 0;
+    //if ( selectedParameter >= np + ns ) selectedParameter = np + ns - 1;
 
     selectCurrentParameter();
 
@@ -508,7 +510,7 @@ void PylonMFD2010::Update (HDC hDC)
 		PRINTDEBUG;
 		return;
 	}
-	selectCurrentParameter();
+	selectCurrentAttachment();
 
 	if (selectedAttachment!=NULL) {
 		line+=LINE;
@@ -553,6 +555,8 @@ void PylonMFD2010::Update (HDC hDC)
 //**********************************************************************
 
 		selectedParameter = pchild->GetMFDSelectedParameter();
+
+		selectCurrentParameter();
 
 		if (selectedParameter<np && pchild!=NULL && ( !pchild->userParametersEnabled || !showCommands ) ) {
 			selSequence=0;
