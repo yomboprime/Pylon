@@ -285,7 +285,9 @@ bool PylonMFD::Update( oapi::Sketchpad *skp ) {
 		return true;
 	}
 
-	selectCurrentAttachment();
+	//2018 BUG 1
+	selectCurrentParameter();
+	//selectCurrentAttachment();
 
 	if (selectedAttachment!=NULL) {
 		y += lineHeight;
@@ -334,7 +336,8 @@ bool PylonMFD::Update( oapi::Sketchpad *skp ) {
     //if ( selectedParameter < 0 ) selectedParameter = 0;
     //if ( selectedParameter >= np + ns ) selectedParameter = np + ns - 1;
 
-    selectCurrentParameter();
+    //2018 BUG 1
+    //selectCurrentParameter();
 
     if (selectedParameter<np && pchild!=NULL && ( !pchild->userParametersEnabled || !showCommands ) ) {
         selSequence=0;
@@ -510,7 +513,10 @@ void PylonMFD2010::Update (HDC hDC)
 		PRINTDEBUG;
 		return;
 	}
-	selectCurrentAttachment();
+
+	//2018 BUG 1
+	selectCurrentParameter();
+	//selectCurrentAttachment();
 
 	if (selectedAttachment!=NULL) {
 		line+=LINE;
@@ -556,7 +562,8 @@ void PylonMFD2010::Update (HDC hDC)
 
 		selectedParameter = pchild->GetMFDSelectedParameter();
 
-		selectCurrentParameter();
+		//2018 BUG 1
+		//selectCurrentParameter();
 
 		if (selectedParameter<np && pchild!=NULL && ( !pchild->userParametersEnabled || !showCommands ) ) {
 			selSequence=0;
@@ -681,12 +688,13 @@ PylonMFDInnerClass::PylonMFDInnerClass() {
 	else {
         selectedAttachment = NULL;
 	}
-
+/*
+    2018 BUG 1
 	pchild = CPylon::IsPylonVessel(child);
 	if ( pchild != NULL ) {
         this->selectedParameter = pchild->GetMFDSelectedParameter();
 	}
-
+*/
 	child = NULL;
 	childH = NULL;
 	pchild = NULL;
