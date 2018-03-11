@@ -247,9 +247,11 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 	if ( seq != NULL ) {
 		seq->Print(cbuf, bufSize);
 		oapiWriteScenario_string (scn, cbuf, "");
+		*( cbuf + 0 ) = ' ';
+		*( cbuf + 1 ) = ' ';
 		seq = seq->nextCmd;
 		while ( seq ) {
-			seq->Print(cbuf, bufSize);
+			seq->Print(cbuf + 2, bufSize - 2);
 			oapiWriteScenario_string (scn, cbuf, "");
 			seq = seq->nextSeq;
 		}
@@ -265,9 +267,11 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
 		if ( seq != 0 ) {
 			seq->Print(cbuf, bufSize);
 			oapiWriteScenario_string (scn, cbuf, "");
+			*( cbuf + 0 ) = ' ';
+            *( cbuf + 1 ) = ' ';
 			seq = seq->nextCmd;
 			while ( seq ) {
-				seq->Print(cbuf, bufSize);
+				seq->Print(cbuf + 2, bufSize - 2);
 				oapiWriteScenario_string (scn, cbuf, "");
 				seq = seq->nextSeq;
 			}
