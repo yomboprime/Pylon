@@ -184,7 +184,7 @@ void PylonMFD::ReadStatus(FILEHANDLE scn) {
 // Repaint the MFD
 //
 // New version using sketchpad
-bool PylonMFD::Update (oapi::Sketchpad *skp) {
+bool PylonMFD::Update( oapi::Sketchpad *skp ) {
 
 
     this->Title( skp, strings[0] );
@@ -284,7 +284,8 @@ bool PylonMFD::Update (oapi::Sketchpad *skp) {
 		PRINTDEBUG2;
 		return true;
 	}
-	selectCurrentParameter();
+
+	selectCurrentAttachment();
 
 	if (selectedAttachment!=NULL) {
 		y += lineHeight;
@@ -330,6 +331,8 @@ bool PylonMFD::Update (oapi::Sketchpad *skp) {
 //**********************************************************************
 
     selectedParameter = pchild->GetMFDSelectedParameter();
+
+    selectCurrentParameter();
 
     if (selectedParameter<np && pchild!=NULL && ( !pchild->userParametersEnabled || !showCommands ) ) {
         selSequence=0;
@@ -673,6 +676,11 @@ PylonMFDInnerClass::PylonMFDInnerClass() {
 	}
 	else {
         selectedAttachment = NULL;
+	}
+
+	pchild = CPylon::IsPylonVessel(child);
+	if ( pchild != NULL ) {
+        this->selectedParameter = pchild->GetMFDSelectedParameter();
 	}
 
 	child = NULL;
