@@ -381,7 +381,8 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
             forceR = - dirR * impulse;
 
             c->AddForce( forceC, posC );
-            r->AddForce( forceR, posR );
+// TODO 2018 COMMENTED FOR DEBUG
+//            r->AddForce( forceR, posR );
 
         }
     }
