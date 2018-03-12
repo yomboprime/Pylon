@@ -169,7 +169,9 @@ private:
 
 	// Sound names
 	struct {
-		char soundName[100];
+		char soundName[NAME_SIZE];
+		char soundPath[NAME_SIZE];
+		int mode;
 	} soundNames[60];
 
 	// Visual handle

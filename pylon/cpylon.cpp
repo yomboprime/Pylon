@@ -52,6 +52,10 @@ CPylon::CPylon (OBJHANDLE hObj, int fmodel)
 	redirectKeysVesselHandle = NULL;
 	redirectKeysVesselName[ 0 ] = 0;
 
+	for ( int i = 0; i < 60; i++ ) {
+        soundNames[ i ].soundName[ 0 ] = 0;
+	}
+
 }
 
 // Destructor
@@ -233,6 +237,13 @@ void CPylon::clbkSaveState (FILEHANDLE scn)
             _snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SET_SEQUENCE_KEY \"%s:%s\" %d", this->GetName(), seq->name, seq->activationKey );
             AddSequenceCmd( stateSequenceIndex, cbuf );
 		}
+	}
+
+	for ( int i = 0; i < 60; i++ ) {
+        if ( *this->soundNames[ i ].soundName != 0 ) {
+            _snprintf_s(cbuf, NAME_SIZE, NAME_SIZE, "SOUND_LOAD \"%s\" \"%s\" %d %d", this->soundNames[ i ].soundPath, this->soundNames[ i ].soundName, i + 1, this->soundNames[ i ].mode );
+            AddSequenceCmd( stateSequenceIndex, cbuf );
+        }
 	}
 
 

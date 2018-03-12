@@ -1137,7 +1137,9 @@ bool PylonSequence::Execute(void) {
 
 					if ( RequestLoadVesselWave( ((CPylon*)this->owner)->GetOrbiterSoundId(), i, value.strValue, EXTENDEDPLAY(n) ) )
 					{
-						_snprintf_s(((CPylon*)this->owner)->soundNames[i-1].soundName, 100, 100, "%s", nextCmd->value.strValue );
+						_snprintf_s(((CPylon*)this->owner)->soundNames[i-1].soundName, NAME_SIZE, NAME_SIZE, "%s", nextCmd->value.strValue );
+						_snprintf_s(((CPylon*)this->owner)->soundNames[i-1].soundPath, NAME_SIZE, NAME_SIZE, "%s", value.strValue );
+						((CPylon*)this->owner)->soundNames[i-1].mode = n;
 					}
 					return true;
 
