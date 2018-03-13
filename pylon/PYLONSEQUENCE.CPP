@@ -801,7 +801,7 @@ bool PylonSequence::Execute(void) {
 					if (!attH) return true;
 					objH = ves->GetAttachmentStatus(attH);
 					if (!objH) return true;
-					CPylon::PylonDetach(ves->GetHandle(), objH, attH, nextCmd->nextCmd->value.dblValue);
+					CPylon::PylonDetach(ves->GetHandle(), objH, attH, nextCmd->nextCmd->value.dblValue, nextCmd->nextCmd->nextCmd->value.intValue != 0 );
 					return true;
 
 				/*

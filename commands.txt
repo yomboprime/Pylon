@@ -247,13 +247,14 @@ Example:
     RELEASE "Carina" 0.3
 
 ----------------------------
-Command: RELEASE_ATT parent(vessel) att_parent(Integer) velocity
+Command: RELEASE_ATT parent(vessel) att_parent(Integer) velocity parentImpulse
 Description: Release an attached vessel with a initial speed and angular velocity, like the RELEASE command, but this one specifies the name and C attachment index of the parent vessel.
 Duration: Instant
 Parameters:
     1: The parent vessel name
     2: The attachment index of the parent to attach the child to (type tochild, C)
     3: Velocity of initial impulse in m/s
+    4: If 0, no force will be applied to the parent vessel. Else Newton's laws will apply (the initial child impulse is applied also to the parent)
 Example:
     RELEASE_ATT "ST-01" 0 0.3
 

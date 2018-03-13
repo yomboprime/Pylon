@@ -140,13 +140,13 @@ public:
     static CPylon * IsPylonVessel(VESSEL *v);
 
 	static bool PylonAttach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
-	static bool PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
+	static bool PylonDetach(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0, bool leanParent = true );
 
 	bool IsFirstFrame();
 
 	// Virtual "internal" functions, use PylonAttach and PylonDetach instead
 	virtual bool PylonAttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
-	virtual bool PylonDetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
+	virtual bool PylonDetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0, bool leanParent = true );
 
 	int GetMFDSelectedParameter();
 	void SetMFDSelectedParameter(int selectedParameter);
@@ -192,7 +192,7 @@ private:
 	void SelectSequence(int i);
 
     static bool AttachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment);
-	static bool DetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0);
+	static bool DetachInternal(OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel = 0.0, bool leanParent = false );
 
 	static void addAttachedMasses( VESSEL *v, bool initialization );
 	static void subtractAttachedMasses( VESSEL *v );

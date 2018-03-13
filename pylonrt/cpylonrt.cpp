@@ -250,7 +250,7 @@ void CPylonRT::clbkPreStep(double simt, double simdt, double mjd)
 	CPylon::clbkPreStep(simt, simdt, mjd);
 }
 
-bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
+bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel, bool leanParent ) {
 
   	VESSEL *p = oapiGetVesselInterface( parent );
     VESSEL *c = oapiGetVesselInterface( child );
@@ -261,7 +261,7 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
 
     ATTACHMENTHANDLE child_attachment = CPylon::GetParentAttachment( c );
 
-    if ( ! CPylon::PylonDetachInternal( parent, child, parent_attachment, 0.0 ) || child_attachment == NULL ) {
+    if ( ! CPylon::PylonDetachInternal( parent, child, parent_attachment, 0.0, leanParent ) || child_attachment == NULL ) {
         return false;
     }
 
@@ -381,8 +381,10 @@ bool CPylonRT::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMEN
             forceR = - dirR * impulse;
 
             c->AddForce( forceC, posC );
-// TODO 2018 COMMENTED FOR DEBUG
-//            r->AddForce( forceR, posR );
+
+            if ( leanParent ) {
+                r->AddForce( forceR, posR );
+            }
 
         }
     }

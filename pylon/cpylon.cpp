@@ -971,8 +971,8 @@ bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
 
 }
 
-bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
-
+bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel, bool leanParent ) {
+_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"DEBUG1: %d", leanParent ? 34: 33 );
     VESSEL *c = oapiGetVesselInterface( child );
 
 	if ( c == NULL ) {
@@ -982,7 +982,7 @@ bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
 
 	if ( pc != NULL ) {
         // Virtual version
-        return pc->PylonDetachInternal( parent, child, parent_attachment, vel );
+        return pc->PylonDetachInternal( parent, child, parent_attachment, vel, leanParent );
 	}
 	else {
 
@@ -995,11 +995,11 @@ bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
 
         if ( pp != NULL ) {
             // Virtual version
-            return pp->PylonDetachInternal( parent, child, parent_attachment, vel );
+            return pp->PylonDetachInternal( parent, child, parent_attachment, vel, leanParent );
         }
         else {
             // Generic version
-            return CPylon::DetachInternal( parent, child, parent_attachment, vel );
+            return CPylon::DetachInternal( parent, child, parent_attachment, vel, leanParent );
         }
 	}
 
@@ -1011,9 +1011,9 @@ bool CPylon::PylonAttachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTH
 
 }
 
-bool CPylon::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
+bool CPylon::PylonDetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel, bool leanParent ) {
 
-	return CPylon::DetachInternal( parent, child, parent_attachment, vel );
+	return CPylon::DetachInternal( parent, child, parent_attachment, vel, leanParent );
 
 }
 
@@ -1030,7 +1030,7 @@ bool CPylon::AttachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE
 	if ( attParent != NULL ) {
         OBJHANDLE o = c->GetAttachmentStatus( attParent );
         if ( o != NULL ) {
-            PylonDetach( o, c->GetHandle(), attParent, 0.0 );
+            PylonDetach( o, c->GetHandle(), attParent, 0.0, false );
         }
 	}
 
@@ -1044,7 +1044,7 @@ bool CPylon::AttachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE
 
 }
 
-bool CPylon::DetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel ) {
+bool CPylon::DetachInternal( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel, bool leanParent ) {
 
 	if ( parent == NULL || child == NULL ) {
         return false;
