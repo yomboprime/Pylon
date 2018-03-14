@@ -652,13 +652,25 @@ bool PylonSequence::Execute(void) {
 					WAIT_THRUSTER_LEVEL vessel thruster level
 				*/
 				case PYL_CMD_WAIT_THRUSTER_LEVEL:
-					activate = false;
 					ves = (VESSEL*)(value.tempRef);
 					dw = nextCmd->value.intValue;
 					if (dw >= ves->GetThrusterCount()) return true;
 					thrustH = ves->GetThrusterHandleByIndex(dw);
 					d = ves->GetThrusterLevel(thrustH);
-					return d >= nextCmd->nextCmd->value.dblValue;
+					if (activate) {
+						activate = false;
+						value.tempDbl = d;
+						return false;
+				    }
+				    else {
+                        d2 = nextCmd->nextCmd->value.dblValue;
+                        if ( value.tempDbl < d2 ) {
+                            return d >= d2;
+                        }
+                        else {
+                            return d <= d2;
+                        }
+				    }
 
 				// Setting vessel status
 				/*
