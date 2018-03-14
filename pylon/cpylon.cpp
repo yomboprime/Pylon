@@ -954,7 +954,6 @@ CPylon *CPylon::getFirstPylonDescendant( VESSEL *v ) {
 bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, ATTACHMENTHANDLE child_attachment ) {
 
     VESSEL *c = oapiGetVesselInterface( child );
-
 	if ( c == NULL ) {
         return false;
 	}
@@ -972,7 +971,7 @@ bool CPylon::PylonAttach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE pa
 }
 
 bool CPylon::PylonDetach( OBJHANDLE parent, OBJHANDLE child, ATTACHMENTHANDLE parent_attachment, double vel, bool leanParent ) {
-_snprintf_s(oapiDebugString(),NAME_SIZE, NAME_SIZE,"DEBUG1: %d", leanParent ? 34: 33 );
+
     VESSEL *c = oapiGetVesselInterface( child );
 
 	if ( c == NULL ) {

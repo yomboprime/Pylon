@@ -1,4 +1,5 @@
 // ==============================================================
+// ==============================================================
 // Pylon MFD - Pylon management
 // ==============================================================
 
@@ -1120,6 +1121,7 @@ bool PylonMFDInnerClass::serviceConsumeKeyBuffered(DWORD key)
 		if (focus->GetAttachmentStatus(selectedAttachment)!=NULL) { sprintf(debugString,"[Create]: Attachment in use.");return true;}
 
 		char s[NAME_SIZE];
+
 		sprintf(s, "%s", objectName, objnameIndex);
 		if (oapiGetVesselByName(s)!=NULL) {
 			int i = 1;
@@ -1216,7 +1218,7 @@ void PylonMFDInnerClass::serviceReadStatus(FILEHANDLE scn) {
 
 bool cbCreateObject(void *id, char *str, void *data)
 {
-	PylonMFD *w = (PylonMFD *)data;
+	PylonMFDInnerClass *w = (PylonMFDInnerClass *)data;
 	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
@@ -1249,10 +1251,12 @@ bool cbCreateObject(void *id, char *str, void *data)
 	vs.base = NULL;
 	vs.port = 0;
 	vs.status = 0;
-	veccpy(vs.rpos, _V(0,0,0));
-	veccpy(vs.rvel, _V(0,0,0));
-	vs.vrot = _V(0,0,0);
-	vs.arot = _V(0,0,0);
+	w->focus->GetGlobalPos( vs.rpos );
+	w->focus->GetGlobalVel( vs.rvel );
+	VECTOR3 angVel1;
+	w->focus->GetAngularVel(angVel1);
+	w->focus->GlobalRot( angVel1, vs.vrot );
+	w->focus->GetGlobalOrientation( vs.arot );
 	vs.nfuel = 0;
 	vs.fuel = NULL;
 	vs.nthruster = 0;
@@ -1262,6 +1266,7 @@ bool cbCreateObject(void *id, char *str, void *data)
 	vs.xpdr = 0;
 
 	OBJHANDLE obj = oapiCreateVesselEx(oName, cName, &vs);
+
 	VESSEL *objInt = oapiGetVesselInterface(obj);
 
 	if (obj==NULL || objInt==NULL) {
@@ -1291,7 +1296,7 @@ bool cbCreateObject(void *id, char *str, void *data)
 
 bool cbReleaseObject(void *id, char *str, void *data)
 {
-	PylonMFD *w = (PylonMFD *)data;
+	PylonMFDInnerClass *w = (PylonMFDInnerClass *)data;
 	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
@@ -1321,7 +1326,7 @@ bool cbReleaseObject(void *id, char *str, void *data)
 
 bool cbAttachObject(void *id, char *str, void *data)
 {
-	PylonMFD *w = (PylonMFD *)data;
+	PylonMFDInnerClass *w = (PylonMFDInnerClass *)data;
 	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
@@ -1352,7 +1357,7 @@ bool cbAttachObject(void *id, char *str, void *data)
 
 bool cbDestroyObject(void *id, char *str, void *data)
 {
-	PylonMFD *w = (PylonMFD *)data;
+	PylonMFDInnerClass *w = (PylonMFDInnerClass *)data;
 	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 
@@ -1370,7 +1375,7 @@ bool cbDestroyObject(void *id, char *str, void *data)
 
 bool cbSetParam(void *id, char *str, void *data)
 {
-	PylonMFD *w = (PylonMFD *)data;
+	PylonMFDInnerClass *w = (PylonMFDInnerClass *)data;
 	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 	if (!w->selectCurrentParameter()) { sprintf(w->debugString,"[Value]: No parameter");return true;}
@@ -1394,7 +1399,7 @@ bool cbSetParam(void *id, char *str, void *data)
 }
 bool cbActivateSeq(void *id, char *str, void *data)
 {
-	PylonMFD *w = (PylonMFD *)data;
+	PylonMFDInnerClass *w = (PylonMFDInnerClass *)data;
 	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 	if (!w->selectCurrentParameter()) { sprintf(w->debugString,"[Activate]: No sequence");return true;}
@@ -1407,7 +1412,7 @@ bool cbActivateSeq(void *id, char *str, void *data)
 }
 bool cbCancelSeq(void *id, char *str, void *data)
 {
-	PylonMFD *w = (PylonMFD *)data;
+	PylonMFDInnerClass *w = (PylonMFDInnerClass *)data;
 	if (w == NULL) { return true;}
 	if (w->focusH == NULL) return true;
 	if (!w->selectCurrentParameter()) { sprintf(w->debugString,"[Cancel]: No sequence");return true;}
