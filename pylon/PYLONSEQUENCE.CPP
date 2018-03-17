@@ -754,7 +754,8 @@ bool PylonSequence::Execute(void) {
 						if (d2 < d ) return false;
 
 						if (dw < 0 || dw >= ves->AttachmentCount(false) ||
-							dw2 < 0 || dw2 >= ves2->AttachmentCount(true)) return true;
+							dw2 < 0 || dw2 >= ves2->AttachmentCount(true) ||
+                            ves2->GetAttachmentStatus(ves2->GetAttachmentHandle(true,dw2)) != NULL ) return true;
 						CPylon::PylonAttach(ves->GetHandle(),
 											ves2->GetHandle(),
 											ves->GetAttachmentHandle(false,dw),
