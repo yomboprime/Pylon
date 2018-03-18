@@ -682,7 +682,8 @@ bool PylonSequence::Execute(void) {
 					dw2 = nextCmd->nextCmd->value.intValue;
 					ves2 = (VESSEL*)(nextCmd->nextCmd->nextCmd->value.tempRef);
 					if (dw < 0 || dw >= ves->AttachmentCount(false) ||
-						dw2 < 0 || dw2 >= ves2->AttachmentCount(true)) return true;
+						dw2 < 0 || dw2 >= ves2->AttachmentCount(true) ||
+                        ves2->GetAttachmentStatus(ves2->GetAttachmentHandle(true,dw2)) != NULL) return true;
 					CPylon::PylonAttach(ves->GetHandle(),
 										ves2->GetHandle(),
 										ves->GetAttachmentHandle(false,dw),
@@ -709,7 +710,8 @@ bool PylonSequence::Execute(void) {
 					if ( length(vector[5]) <= d )
 					{
 						if (dw < 0 || dw >= ves->AttachmentCount(false) ||
-							dw2 < 0 || dw2 >= ves2->AttachmentCount(true)) return true;
+							dw2 < 0 || dw2 >= ves2->AttachmentCount(true) ||
+                            ves2->GetAttachmentStatus(ves2->GetAttachmentHandle(true,dw2)) != NULL) return true;
 						CPylon::PylonAttach(ves->GetHandle(),
 											ves2->GetHandle(),
 											ves->GetAttachmentHandle(false,dw),
